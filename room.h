@@ -10,7 +10,7 @@
 typedef struct
 {
 	char nickname[20];
-	int money;
+	int chip;
 	Handcard hand;
 }Player;
 struct box 
@@ -21,7 +21,8 @@ struct box
 	int canPlay;
 	Player player[2];//creator
 	int start;//slot start
-	int total;//total bet
+	int bet[2];
+	Card deck[9];
 	struct box* next;
 };
 typedef struct box* Room;

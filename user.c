@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "user.h"
 
-User *headUser = NULL;
+
 
 User *makeList()
 {

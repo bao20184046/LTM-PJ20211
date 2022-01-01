@@ -6,11 +6,11 @@ Room makeListRoom()
 	Room new = (Room)calloc(1,sizeof(struct box));
 	return new;
 }
-Player newPlayer(char* nickname,int money)
+Player newPlayer(char* nickname,int chip)
 {
 	Player new;
 	strcpy(new.nickname,nickname);
-	new.money = money;
+	new.chip = chip;
 	return new;
 }
 
@@ -27,22 +27,22 @@ void joinRoom(Room headRoom, Player newPlayer)
 
 int checkRoom(Room headRoom)
 {
-	if(headRoom->player[0].money==0)
+	if(headRoom->player[0].chip==0)
 	{
 		printf("Player %s failed\n", headRoom->player[0].nickname);
 		return 2;
 	}
-	if(headRoom->player[1].money==0)
+	if(headRoom->player[1].chip==0)
 	{
 		printf("Player %s failed\n", headRoom->player[1].nickname);
 		return 1;
 	}
 	return 0;
 }
-void showPlayer(Room headRoom)
+void showPlayer(Room room)
 {
-	printf("Player %s: %dVND\n",headRoom->player[0].nickname,headRoom->player[0].money);
-	printf("Player %s: %dVND\n",headRoom->player[1].nickname,headRoom->player[1].money);
+	printf("Player %s: %dVND\n",room->player[0].nickname,room->player[0].chip);
+	printf("Player %s: %dVND\n",room->player[1].nickname,room->player[1].chip);
 }
 
 Room getRoombyID(Room headRoom, int id)
@@ -60,6 +60,7 @@ Room getRoombyID(Room headRoom, int id)
 void pushRoom(Room headRoom, int status, int id, char* password, Player creator_room)
 {
 	Room new = (Room)calloc(1,sizeof(struct box));
+	memset(new,0,sizeof(struct box));
 	new->id = id;
 	new->status = status;
 	new->canPlay = 0;
@@ -118,7 +119,7 @@ void drawHand(Card hand[])
 	printf("|%s\t| |%s\t|\n",hand[0].showtype,hand[1].showtype);
 	printf("------------------\n");
 }
-int* newround(Room headRoom,int bet[],Card playercard[][7])
+int* newround(Room room,int bet[],Card playercard[][7])
 {
 	int* result = (int*)calloc(2,sizeof(int));
 	result[0] = -1;//fold player
@@ -131,12 +132,12 @@ int* newround(Room headRoom,int bet[],Card playercard[][7])
 	while(1)
 	{
 		high = bet[0] >= bet[1] ? bet[0] : bet[1]; 
-		printf("%s's turn:\n",headRoom->player[slot].nickname);
+		printf("%s's turn:\n",room->player[slot].nickname);
 		drawHand(playercard[slot]);
-		printf("%s's bet: %d --- %s's bet: %d\n",headRoom->player[0].nickname,bet[0],headRoom->player[1].nickname,bet[1] );
+		printf("%s's bet: %d --- %s's bet: %d\n",room->player[0].nickname,bet[0],room->player[1].nickname,bet[1] );
 		printf("Enter your new raise(press -1 to fold):  ");
 		scanf("%d",&raise);
-		if(raise == headRoom->player[slot].money)
+		if(raise == room->player[slot].chip)
 		{
 			printf("You all-in\n");
 			allin = slot;
@@ -155,9 +156,10 @@ int* newround(Room headRoom,int bet[],Card playercard[][7])
 			printf("You cannot bet with this value(< high bet).re-raise: ");
 			scanf("%d",&raise);
 		}
-		while(raise > headRoom->player[slot].money)
+		while(raise > room->player[slot].chip)
 		{
-			printf("You do not have enough money. Please re-raise: ");
+			printf("%d\n", room->player[slot].chip);
+			printf("You do not have enough chip. Please re-raise: ");
 			scanf("%d",&raise);
 		}
 		if(raise == bet[slot])
@@ -178,8 +180,8 @@ int* newround(Room headRoom,int bet[],Card playercard[][7])
 	}
 	if(allin != -1)
 	{
-		printf("%s's turn: \n", headRoom->player[slot].nickname);
-		printf("Player %s had already all-in.\n", headRoom->player[allin].nickname);
+		printf("%s's turn: \n", room->player[slot].nickname);
+		printf("Player %s had already all-in.\n", room->player[allin].nickname);
 		printf("You must choose fold or all-in: 1. All-in\t2. Fold\n");
 		scanf("%d",&raise);
 		result[1] = 0;
@@ -191,21 +193,21 @@ int* newround(Room headRoom,int bet[],Card playercard[][7])
 		else
 		{
 			printf("You all-in!!!\n");
-			if(headRoom->player[0].money > headRoom->player[1].money)
+			if(room->player[0].chip > room->player[1].chip)
 			{
-				bet[0] = headRoom->player[1].money;
+				bet[0] = room->player[1].chip;
 				bet[1] = bet[0];
-				printf("Player %s recive %d VND\n",headRoom->player[0].nickname,headRoom->player[0].money-headRoom->player[1].money);
+				printf("Player %s recive %d Chip\n",room->player[0].nickname,room->player[0].chip - room->player[1].chip);
 			}
-			else if(headRoom->player[0].money < headRoom->player[1].money)
+			else if(room->player[0].chip < room->player[1].chip)
 			{
-				bet[0] = headRoom->player[0].money;
+				bet[0] = room->player[0].chip;
 				bet[1] = bet[0];
-				printf("Player %s recive %d VND\n",headRoom->player[1].nickname,headRoom->player[1].money-headRoom->player[0].money);
+				printf("Player %s recive %d Chip\n",room->player[1].nickname,room->player[1].chip - room->player[0].chip);
 			}
 			else 
 			{
-				bet[0] = headRoom->player[0].money;
+				bet[0] = room->player[0].chip;
 				bet[1] = bet[0];
 			}
 		}
@@ -217,82 +219,83 @@ void showHand(Player player)
 	printf("Name: %s\n",player.nickname);
 	printf("Rank: %d|High: %d|Second: %d|Third: %d|Fouth: %d|Last: %d\n", player.hand.rank,player.hand.high_value,player.hand.second_value,player.hand.third_value,player.hand.fouth_value,player.hand.last_value);
 }
-void match(Room headRoom)
+void match(Room room)
 {
 	int *deck = rollcard();
 	int totalbet = 0;
 	int *Round = (int*)calloc(2,sizeof(int));
-	int bet[2] = {0,0};
+	room->bet[0] = 0;
+	room->bet[1] = 0;
 	int fold = -1;
 	Card Deck[DECK_SIZE];
 	Card playercard[2][7];
-	for(int i = 0; i < DECK_SIZE;i++)
+	for(int i = 0; i < 9;i++)
 	{
-		Deck[i] = newcard(deck[i]);
+		room->deck[i] = newcard(deck[i]);
 	}
 	for(int i = 0; i < 2;i++)
 	{
-		playercard[i][0] = Deck[i];
-		playercard[i][1] = Deck[2 + i];
+		playercard[i][0] = room->deck[i];
+		playercard[i][1] = room->deck[2 + i];
 		for(int j = 2; j < 7; j++)
 		{
-			playercard[i][j] = Deck[2+j];
+			playercard[i][j] = room->deck[2+j];
 		}
 	}
 	printf("Round 1:\n");
-	drawTable(0,Deck,4);
-	Round = newround(headRoom,bet,playercard);
+	drawTable(0,room->deck,4);
+	Round = newround(room,room->bet,playercard);
 	if(Round[1] == 1){
 		printf("Round 2:\n");
-		drawTable(1,Deck,4);
-		Round = newround(headRoom,bet,playercard);
+		drawTable(1,room->deck,4);
+		Round = newround(room,room->bet,playercard);
 	}
 	if(Round[1] == 1){
 		printf("Round 3:\n");
-		drawTable(2,Deck,4);
-		Round = newround(headRoom,bet,playercard);
+		drawTable(2,room->deck,4);
+		Round = newround(room,room->bet,playercard);
 	} 
 	if(Round[1] == 1){
 		printf("Round 4:\n");
-		drawTable(3,Deck,4);
-		Round = newround(headRoom,bet,playercard);
+		drawTable(3,room->deck,4);
+		Round = newround(room,room->bet,playercard);
 	}
-	totalbet = bet[0] + bet[1];
-	headRoom->player[0].money-=bet[0];
-	headRoom->player[1].money-=bet[1];
+	totalbet = room->bet[0] + room->bet[1];
+	room->player[0].chip-=room->bet[0];
+	room->player[1].chip-=room->bet[1];
 	if(Round[0]!=-1)
 	{
 		if(Round[0] == 0)
 		{
-			printf("Player %s wins this match\n",headRoom->player[1].nickname );
-			headRoom->player[1].money+=totalbet;
+			printf("Player %s wins this match\n",room->player[1].nickname );
+			room->player[1].chip+=totalbet;
 		}
 		else
 		{
-			printf("Player %s wins this match\n",headRoom->player[0].nickname );
-			headRoom->player[0].money+=totalbet;
+			printf("Player %s wins this match\n",room->player[0].nickname );
+			room->player[0].chip+=totalbet;
 		}
 	}
 	else
 	{
-		headRoom->player[0].hand = calculate(playercard[0]);
-		headRoom->player[1].hand = calculate(playercard[1]);
-		showHand(headRoom->player[0]);
-		showHand(headRoom->player[1]);
-		if(handCompare(headRoom->player[0].hand,headRoom->player[1].hand)>0)
+		room->player[0].hand = calculate(playercard[0]);
+		room->player[1].hand = calculate(playercard[1]);
+		showHand(room->player[0]);
+		showHand(room->player[1]);
+		if(handCompare(room->player[0].hand,room->player[1].hand)>0)
 		{
-			printf("%s wins this match\n",headRoom->player[0].nickname );
-			headRoom->player[0].money+=totalbet;
+			printf("%s wins this match\n",room->player[0].nickname );
+			room->player[0].chip+=totalbet;
 		}
-		else if(handCompare(headRoom->player[0].hand,headRoom->player[1].hand)<0)
+		else if(handCompare(room->player[0].hand,room->player[1].hand)<0)
 		{
-			printf("%s wins this match\n",headRoom->player[1].nickname );
-			headRoom->player[1].money+=totalbet;
+			printf("%s wins this match\n",room->player[1].nickname );
+			room->player[1].chip+=totalbet;
 		}
 		else{
 			printf("Draw:)!!!\n" );
-			headRoom->player[1].money+=totalbet/2;
-			headRoom->player[0].money+=totalbet/2;
+			room->player[1].chip+=totalbet/2;
+			room->player[0].chip+=totalbet/2;
 		}
 	}	
 }

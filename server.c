@@ -7,22 +7,22 @@
 #include<netinet/in.h>
 #include<sys/socket.h>
 #include<sys/time.h>
-
+#include "protocol.h"
+#include "user.h"
 #define MAXFD 10	//Size of fds array
 #define PORT 6666	
-#define BUFFSIZE 1024
-
+User* headUser = NULL;
 void LoadUser()
 {
 	FILE *file = fopen("user.txt","r");
 	char username[30],password[20],nickname[20];
-	head = makeList();
+	headUser = makeList();
 	while(!feof(file))
 	{
 		fscanf(file,"%s %s %s\n",username,password,nickname);
 		if(feof(file))
 			break;
-		pushUser(head,username,password,nickname);
+		pushUser(headUser,username,password,nickname);
 	}
 	fclose(file);
 }
@@ -39,11 +39,90 @@ void fds_add(int fds[],int fd)
 		}
 	}
 }
-
+//0username password nickname
+int processSignUpRequest(char *msg)
+{
+	char *username = (char*)calloc(30,sizeof(char));
+	char *password = (char*)calloc(20,sizeof(char));
+	char *nickname = (char*)calloc(20,sizeof(char));
+	int i = 1,j = 0;
+	while(msg[i]!=' ')
+	{
+		username[j] = msg[i];
+		j++;
+		i++;
+	}
+	username[j] = '\0';
+	if(getUserByUserName(headUser,username)!=NULL)
+	{
+		return 0;
+	}
+	j = 0;i++;
+	while(msg[i]!=' ')
+	{
+		password[j] = msg[i];
+		j++;
+		i++;
+	}
+	password[j] = '\0';
+	j = 0;i++;
+	while(msg[i]!='\0')
+	{
+		nickname[j] = msg[i];
+		j++;
+		i++;
+	}
+	nickname[j] = '\0';
+	pushUser(headUser,username,password,nickname);
+	return 1;
+}
+int processSignInRequest(char *msg)
+{
+	char *username = (char*)calloc(30,sizeof(char));
+	char *password = (char*)calloc(20,sizeof(char));
+	User *loginUser = NULL;
+	int i = 1,j = 0;
+	while(msg[i]!=' ')
+	{
+		username[j] = msg[i];
+		j++;
+		i++;
+	}
+	username[j] = '\0';
+	loginUser = getUserByUserName(headUser,username);
+	if(loginUser==NULL)
+	{
+		return 0;
+	}
+	j = 0;i++;
+	while(msg[i]!='\0')
+	{
+		password[j] = msg[i];
+		j++;
+		i++;
+	}
+	password[j] = '\0';
+	j = 0;i++;
+	if(strcmp(loginUser->password,password)!=0)
+	{
+		return 1;
+	}
+	return 2;
+}
+char *makeResMessage(RES_TYPE type,SIGNIU_RES res)
+{
+	char *msg = (char*)calloc(4,sizeof(char));
+	msg[0] = '0' + type;
+	msg[1] = ' ';
+	msg[2] = '0' + res;
+	msg[3] = '\0';
+	return msg;
+}
 int main()
 {
 	int sockfd=socket(AF_INET,SOCK_STREAM,0);
 	assert(sockfd!=-1);
+	int ruler;
 	
     printf("sockfd=%d\n",sockfd);
     
@@ -141,6 +220,7 @@ int main()
 					else   //Receive data recv when an existing client sends data
 					{
 						char buff[128]={0};
+						LoadUser();
 						int res=recv(fds[i],buff,127,0);
 						if(res<=0)
 						{
@@ -150,8 +230,32 @@ int main()
 						}
 						else
 						{
-							printf("recv(%d)=%s\n",fds[i],buff);	//Output Client Sent Information
-							send(fds[i],"OK",2,0);	//Reply message to client
+							switch(buff[0]-'0')
+							{
+								case REGISTER:
+								{
+									ruler = processSignUpRequest(buff);
+									if(ruler == 0)
+									{
+										send(fds[i],makeResMessage(REG_RES,EXISTED),5,0);
+									}
+									else send(fds[i],makeResMessage(REG_RES,SUCCESS_SIGNUP),5,0);
+									break;
+								}
+								case LOGIN:
+								{
+									ruler = processSignInRequest(buff);
+									if(ruler == 0)
+									{
+										send(fds[i],makeResMessage(LOG_RES,NOT_EXIST),5,0);
+									} else if(ruler == 1)
+									{
+										send(fds[i],makeResMessage(LOG_RES,WRONG_PASS),5,0);
+									}else send(fds[i],makeResMessage(LOG_RES,SUCCESS_SIGNIN),5,0);
+									break;
+								}
+
+							}
 						}
 					}
 				}
