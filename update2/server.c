@@ -9,9 +9,11 @@
 #include<sys/time.h>
 #include "protocol.h"
 #include "user.h"
+#include "room.h"
 #define MAXFD 10	//Size of fds array
 #define PORT 6666	
 User* headUser = NULL;
+Room *headRoom = NULL;
 void LoadUser()
 {
 	FILE *file = fopen("user.txt","r");
@@ -40,7 +42,7 @@ void fds_add(int fds[],int fd)
 	}
 }
 //0username password nickname
-int processSignUpRequest(char *msg)
+int processSignUpRequest(char *msg,char *nick)
 {
 	char *username = (char*)calloc(30,sizeof(char));
 	char *password = (char*)calloc(20,sizeof(char));
@@ -55,6 +57,7 @@ int processSignUpRequest(char *msg)
 	username[j] = '\0';
 	if(getUserByUserName(headUser,username)!=NULL)
 	{
+		strcpy(nick,"\0");
 		return 0;
 	}
 	j = 0;i++;
@@ -73,10 +76,11 @@ int processSignUpRequest(char *msg)
 		i++;
 	}
 	nickname[j] = '\0';
+	strcpy(nick,nickname);
 	pushUser(headUser,username,password,nickname);
 	return 1;
 }
-int processSignInRequest(char *msg)
+int processSignInRequest(char *msg,char *nick)
 {
 	char *username = (char*)calloc(30,sizeof(char));
 	char *password = (char*)calloc(20,sizeof(char));
@@ -92,6 +96,7 @@ int processSignInRequest(char *msg)
 	loginUser = getUserByUserName(headUser,username);
 	if(loginUser==NULL)
 	{
+		strcpy(nick,"\0");
 		return 0;
 	}
 	j = 0;i++;
@@ -105,24 +110,170 @@ int processSignInRequest(char *msg)
 	j = 0;i++;
 	if(strcmp(loginUser->password,password)!=0)
 	{
+		strcpy(nick,"\0");
 		return 1;
 	}
+	strcpy(nick,loginUser->nickname);
 	return 2;
 }
-char *makeResMessage(RES_TYPE type,SIGNIU_RES res)
+char *signIUResMessage(RES_TYPE type,VALUE_RES res,char *nickname)
 {
-	char *msg = (char*)calloc(4,sizeof(char));
+	char *msg = (char*)calloc(25,sizeof(char));
+	int i = 4;
 	msg[0] = '0' + type;
 	msg[1] = ' ';
 	msg[2] = '0' + res;
-	msg[3] = '\0';
+	msg[3] = ' ';
+	while(i-4 < strlen(nickname))
+	{
+		msg[i] = nickname[i-4];
+		i++;
+	}
+	msg[i] = '\0';
 	return msg;
+}
+char *listRoomMessage()
+{
+	int temp,i = 0;
+	char *str = (char*)calloc(20,sizeof(char));
+	Room *r = headRoom;
+	while(r!=NULL)
+	{
+		if(r->canPlay==0)
+		{
+			temp = r->id;
+			while(temp!=0)
+			{
+				str[i++] = '0' + temp%10;
+				temp/=10;
+			}
+			str[i++] = '-';
+			str[i++] = '0' + r->status;
+			str[i++] = '|';
+		}
+		r = r->next;
+	}
+	str[i-1] = '\0';
+	return str;
+}
+char *createRoomResMessage(int ruler)
+{
+	int i = 2,id = ruler;
+	char *msg = (char*)calloc(6,sizeof(char));
+	msg[0] = '0' + CRE_RES;
+	msg[1] = ' ';
+	while(id!=0)
+	{
+		msg[i++] = '0'+id%10;
+		id/=10;
+	}
+	msg[i] = '\0';
+	return msg;
+}
+int processCreateRoomRequest(char *msg)
+{
+	int j,i = 4,status = msg[2]-'0';
+	int id;
+	char *nickname = (char*)calloc(20,sizeof(char));
+	char *password = (char*)calloc(20,sizeof(char));
+	while(msg[i]!=' '&&i < strlen(msg))
+	{
+		nickname[i-4] = msg[i];
+		i++;
+	}
+	nickname[i-4] = '\0';
+	Player p = newPlayer(nickname,100);
+	if(status == 1)
+	{
+		i++;
+		j = i;
+		while(i < strlen(msg))
+		{
+			password[i-j] = msg[i];
+			i++;
+		}
+		password[i-j] = '\0';
+		printf("%s\n",password );
+		id = pushRoom(&headRoom,1,password,p);
+		return id;
+	}
+	strcpy(password,"\0");
+	id = pushRoom(&headRoom,0,password,p);
+	return id;
+}
+int processJoinRoomRequest(char *msg)
+{
+	int id=0,i = 2,j;
+	char *nickname = (char*)calloc(20,sizeof(char));
+	char *password = (char*)calloc(20,sizeof(char));
+	while(msg[i]!=' ')
+	{
+		nickname[i-2] = msg[i];
+		i++;
+	}
+	nickname[i] = '\0';
+	i++;
+	while(msg[i]!=' '&&i<strlen(msg))
+	{
+		id*=10;
+		id+=msg[i]-'0';
+		i++;
+	}
+	Room *r = getRoombyID(headRoom,id);
+	if(r==NULL)
+	{
+		return 0;
+	}
+	if(r->canPlay==1)
+	{
+		return -1;
+	}
+	Player p = newPlayer(nickname,100);
+	if(r->status==1)
+	{
+		i++;
+		j = i;
+		while(i < strlen(msg))
+		{
+			password[i-j] = msg[i];
+			i++;
+		}
+		password[i-j] = '\0';
+		if(strcmp(r->password,password)==0)
+		{
+			joinRoom(r,p);
+			return 1;
+		}
+		else
+		{
+			return -2;
+		}
+	}
+	joinRoom(r,p);
+	return 1;
+}
+char *makeJoinRoomResMessage(VALUE_RES res)
+{
+	char *str = (char*)calloc(6,sizeof(char));
+	str[0] = '0' + JOI_RES;
+	str[1] = ' ';
+	str[2] = '0' + res;
+	str[3] = '\0';
+	return str;
 }
 int main()
 {
+
+	Player p = newPlayer("ngocbao",100);
+	Player q = newPlayer("bao",100);
+	Player e = newPlayer("an",100);
+	pushRoom(&headRoom,0,"",p);
+	pushRoom(&headRoom,0,"",q);
+	pushRoom(&headRoom,1,"abc",e);
 	int sockfd=socket(AF_INET,SOCK_STREAM,0);
 	assert(sockfd!=-1);
 	int ruler;
+	char *nickname = (char*)calloc(20,sizeof(char));
 	
     printf("sockfd=%d\n",sockfd);
     
@@ -230,31 +381,55 @@ int main()
 						}
 						else
 						{
+							buff[res] = '\0';
 							switch(buff[0]-'0')
 							{
 								case REGISTER:
 								{
-									ruler = processSignUpRequest(buff);
+									ruler = processSignUpRequest(buff,nickname);
 									if(ruler == 0)
 									{
-										send(fds[i],makeResMessage(REG_RES,EXISTED),5,0);
+										send(fds[i],signIUResMessage(REG_RES,EXISTED,nickname),25,0);
 									}
-									else send(fds[i],makeResMessage(REG_RES,SUCCESS_SIGNUP),5,0);
+									else {
+										send(fds[i],signIUResMessage(REG_RES,SUCCESS_SIGNUP,nickname),25,0);
+									}
 									break;
 								}
 								case LOGIN:
 								{
-									ruler = processSignInRequest(buff);
+									ruler = processSignInRequest(buff,nickname);
 									if(ruler == 0)
 									{
-										send(fds[i],makeResMessage(LOG_RES,NOT_EXIST),5,0);
+										send(fds[i],signIUResMessage(LOG_RES,NOT_EXIST,nickname),25,0);
 									} else if(ruler == 1)
 									{
-										send(fds[i],makeResMessage(LOG_RES,WRONG_PASS),5,0);
-									}else send(fds[i],makeResMessage(LOG_RES,SUCCESS_SIGNIN),5,0);
+										send(fds[i],signIUResMessage(LOG_RES,WRONG_PASS,nickname),25,0);
+									}else send(fds[i],signIUResMessage(LOG_RES,SUCCESS_SIGNIN,nickname),25,0);
 									break;
 								}
-
+								case CREATEROOM:
+								{
+									ruler = processCreateRoomRequest(buff);
+									send(fds[i],createRoomResMessage(ruler),6,0);
+									break;
+								}
+								case GETLIST:
+								{
+									send(fds[i],listRoomMessage(),20,0);
+									break;
+								}
+								case JOINROOM:
+								{
+									ruler = processJoinRoomRequest(buff);
+									if(ruler==0)
+										send(fds[i],createRoomResMessage(ROOM_NEXIST),6,0);
+									else if(ruler==-1)
+										send(fds[i],createRoomResMessage(FULL_SLOT),6,0);
+									else if(ruler==-2)
+										send(fds[i],createRoomResMessage(WRONG_RPASS),6,0);
+									else send(fds[i],createRoomResMessage(JOIN_SUCCESS),6,0);
+								}
 							}
 						}
 					}

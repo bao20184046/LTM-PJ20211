@@ -28,6 +28,18 @@ void SignIU()
 	printf("Enter your choice\n");
 }
 
+char *getNickName(char *msg)
+{
+	char *nickname = (char*)calloc(20,sizeof(char));
+	int i = 0;
+	while(msg[i+4]!='\0')
+	{
+		nickname[i] = msg[i+4];
+		i++;
+	}
+	nickname[i] = '\0';
+	return nickname;
+}
 
 int main()
 {
@@ -68,6 +80,7 @@ int main()
 				if(msg[2] == '0' + SUCCESS_SIGNIN)
 				{
 					printf("Successfully sign in\n");
+					strcpy(nickname,getNickName(msg));
 					isLoged_in = 1;
 				}
 				else if(msg[2] == '0' + NOT_EXIST)
@@ -89,6 +102,7 @@ int main()
 				if(msg[2] == '0' + SUCCESS_SIGNUP)
 				{
 					printf("Successfully sign up\n");
+					strcpy(nickname,getNickName(msg));
 					isLoged_in = 1;
 				}
 				else if(msg[2] == '0' + EXISTED)
@@ -99,21 +113,6 @@ int main()
 			}
 		}
 	}
-	// while(1)
-	// {
-	// 	menu();
-	// 	char buff[128] = {0};
-	// 	printf("Please Input:");
-	// 	fgets(buff,128,stdin);
-	// 	if(strncmp(buff,"end",3) ==0 )
-	// 	{
-	// 		break;
-	// 	}
-	// 	send(sockfd,buff,strlen(buff),0);
-	// 	memset(buff,0,128);
-	// 	recv(sockfd,buff,127,0);
-	// 	printf("RecvBuff:%s\n",buff);
- //        printf("\n");
-	// }
+	printf("nickname is %s\n",nickname );
 	close(sockfd);
 }
