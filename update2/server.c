@@ -464,14 +464,13 @@ int main()
 								{
 									result = processJoinRoomRequest(buff,i);
 									if(result[0]==0)
-										send(fds[i],createRoomResMessage(ROOM_NEXIST),6,0);
+										send(fds[i],makeJoinRoomResMessage(ROOM_NEXIST),6,0);
 									else if(result[0]==-1)
-										send(fds[i],createRoomResMessage(FULL_SLOT),6,0);
+										send(fds[i],makeJoinRoomResMessage(FULL_SLOT),6,0);
 									else if(result[0]==-2)
-										send(fds[i],createRoomResMessage(WRONG_RPASS),6,0);
+										send(fds[i],makeJoinRoomResMessage(WRONG_RPASS),6,0);
 									else{
-										send(fds[i],createRoomResMessage(JOIN_SUCCESS),6,0);
-										printf("%d\n",result[1]);
+										send(fds[i],makeJoinRoomResMessage(JOIN_SUCCESS),6,0);
 										send(fds[result[1]],makeJoinNoticeToCreatorMessage(result[2]),24,0);
 									} 
 									break;

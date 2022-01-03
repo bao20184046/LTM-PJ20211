@@ -27,9 +27,11 @@ void joinRoom(Room *room, Player newPlayer)
 
 Room *getRoombyID(Room *headRoom, int id)
 {
+	printf("%d\n", id);
 	Room *r = headRoom;
 	while(r!=NULL)
 	{
+		printf("%d)\n", r -> id);
 		if(r->id == id)
 			return r;
 		r = r->next;

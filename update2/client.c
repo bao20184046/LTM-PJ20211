@@ -177,6 +177,7 @@ int main()
 				printf("Please wait for another player to enter the room.\n");
 				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
 				msg[rcvsize] = '\0';
+				printf("%d\n%s\n", rcvsize, msg);
 				break;
 			}
 			case 2:
