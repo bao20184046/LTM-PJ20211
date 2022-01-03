@@ -132,6 +132,15 @@ char *signIUResMessage(RES_TYPE type,VALUE_RES res,char *nickname)
 	msg[i] = '\0';
 	return msg;
 }
+int processBetRequest(char *msg)
+{
+	return 0;
+}
+char *betResMessage()
+{
+	//TODO
+	return "alo";
+}
 char *listRoomMessage()
 {
 	int temp,i = 0;
@@ -170,7 +179,7 @@ char *createRoomResMessage(int ruler)
 	msg[i] = '\0';
 	return msg;
 }
-int processCreateRoomRequest(char *msg)
+int processCreateRoomRequest(char *msg,int position)
 {
 	int j,i = 4,status = msg[2]-'0';
 	int id;
@@ -199,10 +208,14 @@ int processCreateRoomRequest(char *msg)
 	}
 	strcpy(password,"\0");
 	id = pushRoom(&headRoom,0,password,p);
+	setPositionToPlayer(headRoom,id,0,position);
 	return id;
 }
-int processJoinRoomRequest(char *msg)
+
+int *processJoinRoomRequest(char *msg,int position)
 {
+	int *result = (int*)calloc(3,sizeof(int));
+	memset(result,0,sizeof(result));
 	int id=0,i = 2,j;
 	char *nickname = (char*)calloc(20,sizeof(char));
 	char *password = (char*)calloc(20,sizeof(char));
@@ -222,11 +235,13 @@ int processJoinRoomRequest(char *msg)
 	Room *r = getRoombyID(headRoom,id);
 	if(r==NULL)
 	{
-		return 0;
+		result[0] = 0;
+		return result;
 	}
 	if(r->canPlay==1)
 	{
-		return -1;
+		result[0] = -1;
+		return result;
 	}
 	Player p = newPlayer(nickname,100);
 	if(r->status==1)
@@ -242,15 +257,40 @@ int processJoinRoomRequest(char *msg)
 		if(strcmp(r->password,password)==0)
 		{
 			joinRoom(r,p);
-			return 1;
+			r->player[1].position = position;
+			result[0] = 1;
+			result[1] = r->player[0].position;
+			result[2] = id;
+			return result;
 		}
 		else
 		{
-			return -2;
+			result[0] = -2;
+			return result;
 		}
 	}
 	joinRoom(r,p);
-	return 1;
+	r->player[1].position = position;
+	result[0] = 1;
+	result[1] = r->player[0].position;
+	result[2] = id;
+	return result;
+}
+char *makeJoinNoticeToCreatorMessage(int id)
+{
+	int i = 2;
+	char *str = (char*)calloc(24,sizeof(char));
+	Room *r = getRoombyID(headRoom,id);
+	str[0] = '0' + NOT_RES;
+	str[1] = ' ';
+	printf("--CHECKBUG--\n");
+	while(i-2 < strlen(r->player[1].nickname))
+	{
+		str[i] = r->player[1].nickname[i-2];
+		i++;
+	}	
+	str[i] = '\0';
+	return str;
 }
 char *makeJoinRoomResMessage(VALUE_RES res)
 {
@@ -273,6 +313,7 @@ int main()
 	int sockfd=socket(AF_INET,SOCK_STREAM,0);
 	assert(sockfd!=-1);
 	int ruler;
+	int *result = (int*)calloc(3,sizeof(int));
 	char *nickname = (char*)calloc(20,sizeof(char));
 	
     printf("sockfd=%d\n",sockfd);
@@ -410,7 +451,7 @@ int main()
 								}
 								case CREATEROOM:
 								{
-									ruler = processCreateRoomRequest(buff);
+									ruler = processCreateRoomRequest(buff,i);
 									send(fds[i],createRoomResMessage(ruler),6,0);
 									break;
 								}
@@ -421,15 +462,26 @@ int main()
 								}
 								case JOINROOM:
 								{
-									ruler = processJoinRoomRequest(buff);
-									if(ruler==0)
+									result = processJoinRoomRequest(buff,i);
+									if(result[0]==0)
 										send(fds[i],createRoomResMessage(ROOM_NEXIST),6,0);
-									else if(ruler==-1)
+									else if(result[0]==-1)
 										send(fds[i],createRoomResMessage(FULL_SLOT),6,0);
-									else if(ruler==-2)
+									else if(result[0]==-2)
 										send(fds[i],createRoomResMessage(WRONG_RPASS),6,0);
-									else send(fds[i],createRoomResMessage(JOIN_SUCCESS),6,0);
+									else{
+										send(fds[i],createRoomResMessage(JOIN_SUCCESS),6,0);
+										printf("%d\n",result[1]);
+										send(fds[result[1]],makeJoinNoticeToCreatorMessage(result[2]),24,0);
+									} 
+									break;
 								}
+								case BET:
+								{
+									ruler = processBetRequest(buff);
+									break;
+								}
+
 							}
 						}
 					}

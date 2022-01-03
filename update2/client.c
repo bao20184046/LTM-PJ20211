@@ -71,6 +71,17 @@ void showListRoom(char *msg)
 	}
 	free(temp);
 }
+void showIDCreatedRoom(char *msg)
+{
+	int i = 2;
+	printf("Successful room creation. Room ID is ");
+	while(i < strlen(msg))
+	{
+		printf("%c", msg[i]);
+		i++;
+	}
+	printf("\n");
+}
 
 int main()
 {
@@ -144,7 +155,7 @@ int main()
 			}
 		}
 	}
-	printf("nickname is %s\n",nickname );
+	printf("Login successfully. Welcome %s\n",nickname );
 	while(isLoged_in == 1)
 	{
 		menu();
@@ -162,7 +173,10 @@ int main()
 				send(sockfd,msg,strlen(msg),0);
 				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
 				msg[rcvsize] = '\0';
-				printf("%s\n", msg);
+				showIDCreatedRoom(msg);
+				printf("Please wait for another player to enter the room.\n");
+				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+				msg[rcvsize] = '\0';
 				break;
 			}
 			case 2:

@@ -11,7 +11,6 @@ typedef enum{
 	CREATEROOM,
 	GETLIST,
 	JOINROOM,
-	LOGOUT,
 	BET,
 }MSG_TYPE;
 
@@ -21,6 +20,7 @@ typedef enum{
 	CRE_RES,
 	GET_RES,
 	JOI_RES,
+	NOT_RES,
 	BET_RES
 }RES_TYPE;
 
@@ -42,4 +42,5 @@ char *makeSignUpMessage();
 char *makeCreateRoomMessage(char* nickname);
 char *getAvailableRoomMessage();
 char *makeJoinRoomMessage(char *nickname);
+char *makeBetMessage(char *nickname);
 #endif

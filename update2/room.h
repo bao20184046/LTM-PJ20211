@@ -10,6 +10,7 @@
 typedef struct
 {
 	char nickname[20];
+	int position;
 	int chip;
 	Handcard hand;
 }Player;
@@ -23,7 +24,7 @@ typedef struct box
 	Player player[2];//creator
 	int start;//slot start
 	int bet[2];
-	Card deck[9];
+	int deck[9];
 	struct box* next;
 }Room;
 Room *makeListRoom();
@@ -34,6 +35,8 @@ void showPlayer(Room *headRoom);
 Room *getRoombyID(Room *headRoom, int id);
 int pushRoom(Room **headRoom, int status, char* password, Player creator_room);
 int* newround(Room *headRoom,int bet[],Card playercard[][7]);
-void match(Room *headRoom);
+// void match(Room *headRoom);
+void setPositionToPlayer(Room *headRoom,int id, int slot, int position);
+void setDeckToRoom(Room *headRoom,int id);
 
 #endif

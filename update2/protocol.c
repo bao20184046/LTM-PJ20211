@@ -245,3 +245,9 @@ char* makeJoinRoomMessage(char *nickname)
 	str[i] = '\0';
 	return str;	
 }
+char *makeBetMessage(char *nickname)
+{
+	//TODO
+	
+	return "alo";
+}
