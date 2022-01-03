@@ -14,6 +14,11 @@
 #define PORT 6666	
 User* headUser = NULL;
 Room *headRoom = NULL;
+typedef struct{
+	int i1;
+	int i2;
+}connectt;
+connectt Link[20];
 void LoadUser()
 {
 	FILE *file = fopen("user.txt","r");
@@ -208,14 +213,12 @@ int processCreateRoomRequest(char *msg,int position)
 	}
 	strcpy(password,"\0");
 	id = pushRoom(&headRoom,0,password,p);
-	setPositionToPlayer(headRoom,id,0,position);
+	Link[id].i1 = position;
 	return id;
 }
 
-int *processJoinRoomRequest(char *msg,int position)
+int processJoinRoomRequest(char *msg,int position)
 {
-	int *result = (int*)calloc(3,sizeof(int));
-	memset(result,0,sizeof(result));
 	int id=0,i = 2,j;
 	char *nickname = (char*)calloc(20,sizeof(char));
 	char *password = (char*)calloc(20,sizeof(char));
@@ -235,13 +238,11 @@ int *processJoinRoomRequest(char *msg,int position)
 	Room *r = getRoombyID(headRoom,id);
 	if(r==NULL)
 	{
-		result[0] = 0;
-		return result;
+		return 0;
 	}
 	if(r->canPlay==1)
 	{
-		result[0] = -1;
-		return result;
+		return -1;
 	}
 	Player p = newPlayer(nickname,100);
 	if(r->status==1)
@@ -257,24 +258,17 @@ int *processJoinRoomRequest(char *msg,int position)
 		if(strcmp(r->password,password)==0)
 		{
 			joinRoom(r,p);
-			r->player[1].position = position;
-			result[0] = 1;
-			result[1] = r->player[0].position;
-			result[2] = id;
-			return result;
+			Link[id].i2 = position;
+			return id;
 		}
 		else
 		{
-			result[0] = -2;
-			return result;
+			return -2;
 		}
 	}
 	joinRoom(r,p);
-	r->player[1].position = position;
-	result[0] = 1;
-	result[1] = r->player[0].position;
-	result[2] = id;
-	return result;
+	Link[id].i2 = position;
+	return id;
 }
 char *makeJoinNoticeToCreatorMessage(int id)
 {
@@ -283,7 +277,6 @@ char *makeJoinNoticeToCreatorMessage(int id)
 	Room *r = getRoombyID(headRoom,id);
 	str[0] = '0' + NOT_RES;
 	str[1] = ' ';
-	printf("--CHECKBUG--\n");
 	while(i-2 < strlen(r->player[1].nickname))
 	{
 		str[i] = r->player[1].nickname[i-2];
@@ -303,7 +296,7 @@ char *makeJoinRoomResMessage(VALUE_RES res)
 }
 int main()
 {
-
+	memset(Link,0,sizeof(Link));
 	Player p = newPlayer("ngocbao",100);
 	Player q = newPlayer("bao",100);
 	Player e = newPlayer("an",100);
@@ -462,17 +455,16 @@ int main()
 								}
 								case JOINROOM:
 								{
-									result = processJoinRoomRequest(buff,i);
-									if(result[0]==0)
-										send(fds[i],createRoomResMessage(ROOM_NEXIST),6,0);
-									else if(result[0]==-1)
-										send(fds[i],createRoomResMessage(FULL_SLOT),6,0);
-									else if(result[0]==-2)
-										send(fds[i],createRoomResMessage(WRONG_RPASS),6,0);
+									ruler = processJoinRoomRequest(buff,i);
+									if(ruler==0)
+										send(fds[i],makeJoinRoomResMessage(ROOM_NEXIST),6,0);
+									else if(ruler==-1)
+										send(fds[i],makeJoinRoomResMessage(FULL_SLOT),6,0);
+									else if(ruler==-2)
+										send(fds[i],makeJoinRoomResMessage(WRONG_RPASS),6,0);
 									else{
-										send(fds[i],createRoomResMessage(JOIN_SUCCESS),6,0);
-										printf("%d\n",result[1]);
-										send(fds[result[1]],makeJoinNoticeToCreatorMessage(result[2]),24,0);
+										send(fds[i],makeJoinRoomResMessage(JOIN_SUCCESS),6,0);
+										send(fds[Link[ruler].i1],makeJoinNoticeToCreatorMessage(ruler),24,0);
 									} 
 									break;
 								}

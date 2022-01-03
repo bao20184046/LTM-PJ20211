@@ -7,6 +7,7 @@
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include "protocol.h"
+
 void menu()
 {
 	printf("***************************************\n");
@@ -82,12 +83,24 @@ void showIDCreatedRoom(char *msg)
 	}
 	printf("\n");
 }
-
+void configOpponent(char *msg,char *opponent)
+{
+	int i = 0;
+	while(i+2<strlen(msg))
+	{
+		opponent[i] = msg[i+2];
+		i++;
+	}
+	opponent[i] = '\0';
+	printf("**************************************\n");
+	printf("%s join your room. Battle start!!!!\n",opponent );
+}
 int main()
 {
 	int sockfd = socket(AF_INET,SOCK_STREAM,0);	
 	assert(sockfd != -1 );
 	char *nickname = (char*)calloc(20,sizeof(char));
+	char *opponent = (char*)calloc(20,sizeof(char));
 	char *msg = (char*)calloc(MSG_SIZE,sizeof(char));
 	int choice,isLoged_in = 0;
 	int rcvsize;
@@ -176,7 +189,12 @@ int main()
 				showIDCreatedRoom(msg);
 				printf("Please wait for another player to enter the room.\n");
 				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+				printf("%d\n",rcvsize );
 				msg[rcvsize] = '\0';
+				if(msg[0] = '0' + NOT_RES)
+				{
+					configOpponent(msg,opponent);
+				}
 				break;
 			}
 			case 2:

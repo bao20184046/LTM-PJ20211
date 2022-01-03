@@ -130,7 +130,7 @@ char *makeCreateRoomMessage(char* nickname)
 	int room_type,i = 4,j;
 	printf("CREATE ROOM:\n");
 	printf("0. Public room\n");
-	printf("1. Purivate room\n");
+	printf("1. Private room\n");
 	printf("Please enter your choice: \n");
 	scanf("%d",&room_type);
 	while(room_type<0||room_type>1)

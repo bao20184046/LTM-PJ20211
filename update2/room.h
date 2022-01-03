@@ -10,7 +10,6 @@
 typedef struct
 {
 	char nickname[20];
-	int position;
 	int chip;
 	Handcard hand;
 }Player;
@@ -36,7 +35,6 @@ Room *getRoombyID(Room *headRoom, int id);
 int pushRoom(Room **headRoom, int status, char* password, Player creator_room);
 int* newround(Room *headRoom,int bet[],Card playercard[][7]);
 // void match(Room *headRoom);
-void setPositionToPlayer(Room *headRoom,int id, int slot, int position);
 void setDeckToRoom(Room *headRoom,int id);
 
 #endif

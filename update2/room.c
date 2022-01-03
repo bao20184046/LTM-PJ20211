@@ -36,11 +36,6 @@ Room *getRoombyID(Room *headRoom, int id)
 	}
 	return NULL;
 }
-void setPositionToPlayer(Room *headRoom,int id, int slot, int position)
-{
-	Room *r = getRoombyID(headRoom,id);
-	r->player[slot].position = position;
-}
 void setDeckToRoom(Room *headRoom,int id)
 {
 	int * deck = rollcard();
