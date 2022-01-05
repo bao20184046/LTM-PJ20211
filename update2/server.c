@@ -184,7 +184,7 @@ char *createRoomResMessage(int ruler)
 	msg[i] = '\0';
 	return msg;
 }
-int processCreateRoomRequest(char *msg,int position)
+int processCreateRoomRequest(char *msg)
 {
 	int j,i = 4,status = msg[2]-'0';
 	int id;
@@ -213,11 +213,10 @@ int processCreateRoomRequest(char *msg,int position)
 	}
 	strcpy(password,"\0");
 	id = pushRoom(&headRoom,0,password,p);
-	Link[id].i1 = position;
 	return id;
 }
 
-int processJoinRoomRequest(char *msg,int position)
+int processJoinRoomRequest(char *msg)
 {
 	int id=0,i = 2,j;
 	char *nickname = (char*)calloc(20,sizeof(char));
@@ -258,7 +257,7 @@ int processJoinRoomRequest(char *msg,int position)
 		if(strcmp(r->password,password)==0)
 		{
 			joinRoom(r,p);
-			Link[id].i2 = position;
+			setDeckToRoom(r);
 			return id;
 		}
 		else
@@ -267,13 +266,14 @@ int processJoinRoomRequest(char *msg,int position)
 		}
 	}
 	joinRoom(r,p);
-	Link[id].i2 = position;
+	setDeckToRoom(r);
 	return id;
 }
 char *makeJoinNoticeToCreatorMessage(int id)
 {
-	int i = 2;
-	char *str = (char*)calloc(24,sizeof(char));
+	int i = 2,p;
+	char *str = (char*)calloc(48,sizeof(char));
+	char *temp = (char*)calloc(3,sizeof(char));
 	Room *r = getRoombyID(headRoom,id);
 	str[0] = '0' + NOT_RES;
 	str[1] = ' ';
@@ -281,17 +281,49 @@ char *makeJoinNoticeToCreatorMessage(int id)
 	{
 		str[i] = r->player[1].nickname[i-2];
 		i++;
-	}	
-	str[i] = '\0';
+	}
+	str[i++] = ' ';
+	for(int j = 0; j < 7; j++)
+	{
+		sprintf(temp,"%d",r->deck[j]);
+		p = i;
+		while(i-p<strlen(temp))
+		{
+			str[i] = temp[i - p];
+			i++;
+		}
+		str[i++] = '|';
+	}
+	str[i-1] = '\0';
 	return str;
 }
-char *makeJoinRoomResMessage(VALUE_RES res)
+char *makeJoinRoomResMessage(VALUE_RES res,int id)
 {
-	char *str = (char*)calloc(6,sizeof(char));
+	int i = 4,j;
+	char *str = (char*)calloc(30,sizeof(char));
+	char *temp = (char*)calloc(3,sizeof(char));
+	Room *r = getRoombyID(headRoom,id);
 	str[0] = '0' + JOI_RES;
 	str[1] = ' ';
 	str[2] = '0' + res;
-	str[3] = '\0';
+	if(res !=JOIN_SUCCESS)
+	{
+		str[3] = '\0';
+		return str;
+	}
+	str[3] = ' ';
+	for(int k = 2; k < 9; k++)
+	{
+		sprintf(temp,"%d",r->deck[k]);
+		j = i;
+		while(i - j < strlen(temp))
+		{
+			str[i]  = temp[i - j];
+			i++;
+		}
+		str[i++] = '|';
+	}
+	str[i-1] = '\0';
 	return str;
 }
 int main()
@@ -440,12 +472,14 @@ int main()
 									{
 										send(fds[i],signIUResMessage(LOG_RES,WRONG_PASS,nickname),25,0);
 									}else send(fds[i],signIUResMessage(LOG_RES,SUCCESS_SIGNIN,nickname),25,0);
+									printf("%d\n",i );
 									break;
 								}
 								case CREATEROOM:
 								{
-									ruler = processCreateRoomRequest(buff,i);
+									ruler = processCreateRoomRequest(buff);
 									send(fds[i],createRoomResMessage(ruler),6,0);
+									Link[ruler].i1 = i;
 									break;
 								}
 								case GETLIST:
@@ -455,16 +489,18 @@ int main()
 								}
 								case JOINROOM:
 								{
-									ruler = processJoinRoomRequest(buff,i);
+									ruler = processJoinRoomRequest(buff);
 									if(ruler==0)
-										send(fds[i],makeJoinRoomResMessage(ROOM_NEXIST),6,0);
+										send(fds[i],makeJoinRoomResMessage(ROOM_NEXIST,ruler),6,0);
 									else if(ruler==-1)
-										send(fds[i],makeJoinRoomResMessage(FULL_SLOT),6,0);
+										send(fds[i],makeJoinRoomResMessage(FULL_SLOT,ruler),6,0);
 									else if(ruler==-2)
-										send(fds[i],makeJoinRoomResMessage(WRONG_RPASS),6,0);
+										send(fds[i],makeJoinRoomResMessage(WRONG_RPASS,ruler),6,0);
 									else{
-										send(fds[i],makeJoinRoomResMessage(JOIN_SUCCESS),6,0);
-										send(fds[Link[ruler].i1],makeJoinNoticeToCreatorMessage(ruler),24,0);
+										Link[ruler].i2 = i;
+										send(fds[i],makeJoinRoomResMessage(JOIN_SUCCESS,ruler),30,0);
+										send(fds[Link[ruler].i1],makeJoinNoticeToCreatorMessage(ruler),48,0);
+										printf("%d-%d\n",Link[ruler].i1,Link[ruler].i2);
 									} 
 									break;
 								}

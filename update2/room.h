@@ -35,6 +35,6 @@ Room *getRoombyID(Room *headRoom, int id);
 int pushRoom(Room **headRoom, int status, char* password, Player creator_room);
 int* newround(Room *headRoom,int bet[],Card playercard[][7]);
 // void match(Room *headRoom);
-void setDeckToRoom(Room *headRoom,int id);
+void setDeckToRoom(Room *room);
 
 #endif

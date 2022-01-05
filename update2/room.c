@@ -36,13 +36,13 @@ Room *getRoombyID(Room *headRoom, int id)
 	}
 	return NULL;
 }
-void setDeckToRoom(Room *headRoom,int id)
+void setDeckToRoom(Room *room)
 {
+	memset(room->deck,0,sizeof(room->deck));
 	int * deck = rollcard();
-	Room *r = getRoombyID(headRoom,id);
 	for(int i = 0; i < 9; i++)
 	{
-		r->deck[i] = deck[i];
+		room->deck[i] = deck[i];
 	}
 }
 int checkRoom(Room *room)
