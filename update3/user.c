@@ -30,17 +30,17 @@ User *newUser(char* username, char* password, char* nickname)
 	acc->next = NULL;
 	return acc;
 }
-void pushUser(User *head,char* username,char *password, char *nickname)
+void pushUser(User **head,char* username,char *password, char *nickname)
 {
-	if(getUserByUserName(head,username)!=NULL)
+	if(getUserByUserName(*head,username)!=NULL)
 	{
 		return;
 	}
 	User *new = newUser(username, password, nickname);
-	User *acc = head;
-	if(head == NULL)
+	User *acc = *head;
+	if(*head == NULL)
 	{
-		head = new;
+		*head = new;
 	}
 	else
 	{
@@ -50,3 +50,15 @@ void pushUser(User *head,char* username,char *password, char *nickname)
 	}
 }
 
+int numberNode(User *head)
+{
+	int i = 0;
+	User * temp = head;
+	while(temp!=NULL)
+	{
+		i++;
+		printf("%s-\n",temp->nickname);
+		temp = temp->next;
+	}
+	return i;
+}

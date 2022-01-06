@@ -15,6 +15,6 @@ typedef struct node{
 User *makeList();
 User *getUserByUserName(User *head, char* username);
 User *newUser(char* username, char* password, char* nickname);
-void pushUser(User *head,char* username,char *password, char *nickname);
-
+void pushUser(User **head,char* username,char *password, char *nickname);
+int numberNode(User *head);
 #endif

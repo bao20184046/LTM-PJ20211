@@ -18,6 +18,7 @@ char *makeSignInMessage()
 {
 	char *str1 = (char*)calloc(30,sizeof(char));
 	char *str2 = (char*)calloc(20,sizeof(char));
+	char c;
 	printf("Username: ");
 	gets(str1);
 	while(checkString(str1)!=1)
@@ -28,13 +29,11 @@ char *makeSignInMessage()
 		printf("Username: ");
 		gets(str1);
 	}
-	printf("Password: ");
-	gets(str2);
+	strcpy(str2,getpass("Password: "));
 	while(checkString(str2)==0)
 	{
 		printf("Password cannot contain spaces\n");
-		printf("Password: ");
-		gets(str2);
+		strcpy(str2,getpass("Password: "));
 	}
 	int total_length = strlen(str1) + strlen(str2) + 3;
 	char *str = (char*)calloc(total_length,sizeof(char));
@@ -73,13 +72,11 @@ char *makeSignUpMessage()
 		printf("Username: ");
 		gets(str1);
 	}
-	printf("Password: ");
-	gets(str2);
+	strcpy(str2,getpass("Password: "));
 	while(checkString(str2)==0)
 	{
 		printf("Password cannot contain spaces\n");
-		printf("Password: ");
-		gets(str2);
+		strcpy(str2,getpass("Password: "));
 	}
 	printf("Nickname: ");
 	gets(str3);
@@ -150,13 +147,11 @@ char *makeCreateRoomMessage(char* nickname)
 	if(room_type == 1)
 	{
 		getchar();
-		printf("Please enter password:  " );
-		gets(password);
+		strcpy(password,getpass("Password: "));
 		while(checkString(password)==0)
 		{
 			printf("Password cannot contain spaces\n");
-			printf("Password: ");
-			gets(password);
+			strcpy(password,getpass("Password: "));
 		}
 		str[i++] = ' ';
 		j = i;
@@ -210,13 +205,11 @@ char* makeJoinRoomMessage(char *nickname)
 		printf("ID: ");
 		gets(id);
 	}
-	printf("Input password: ");
-	gets(password);
+	strcpy(password,getpass("Password: "));
 	while(checkString(password)==0)
 	{
 		printf("Password cannot contain spaces\n");
-		printf("Input password: ");
-		gets(password);
+		strcpy(password,getpass("Password: "));
 	}
 	str[0] = '0' + JOINROOM;
 	str[1] = ' ';

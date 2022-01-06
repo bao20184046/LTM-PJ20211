@@ -200,8 +200,6 @@ void configOpponent(char *msg,char *opponent)
 		i++;
 	}
 	opponent[i] = '\0';
-	printf("**************************************\n");
-	printf("%s join your room. Battle start!!!!\n",opponent );
 }
 void configOpponent2(char *msg,char *opponent)
 {
@@ -222,7 +220,6 @@ void configOpponent2(char *msg,char *opponent)
 		i++;
 	}
 	opponent[i - j] = '\0';
-	printf("Your opponent is %s\n",opponent);
 }
 //ENDGAME playerwin la1 la2
 //RAISE bet
@@ -320,6 +317,7 @@ void firstplay(char *opponent,int sockfd)
 				{
 					printf("Draw. Your score is %d\n",chip);
 				}
+				getchar();
 				printf("Press something to exit:....");
 				gets(msg);
 				return;
@@ -327,6 +325,7 @@ void firstplay(char *opponent,int sockfd)
 			drawTable(Round);
 			count = 0;
 		}
+		system("clear");
 		drawTable(Round);
 		drawHand();
 		highbet = bet[0] >= bet[1] ? bet[0] : bet[1];
@@ -339,6 +338,7 @@ void firstplay(char *opponent,int sockfd)
 		{
 			printf("You have surrendered. The winner is %s\n",opponent );
 			strcpy(msg,makeEndMessage(FOLD));
+			send(sockfd,msg,strlen(msg),0);
 			return;
 		}
 		while(newbet < bet[0]||newbet > chip)
@@ -384,6 +384,7 @@ void firstplay(char *opponent,int sockfd)
 			{
 				printf(" Player %s have surrendered. You win this game.\n",opponent );
 				printf("Your score is %d\n",chip + bet[1]);
+				getchar();
 				printf("Press something to exit:....");
 				gets(msg);
 				return;
@@ -425,6 +426,7 @@ void firstplay(char *opponent,int sockfd)
 					{
 						printf("Draw. Your score is %d\n",chip);
 					}
+					getchar();
 					printf("Press something to exit:....");
 					gets(msg);
 					return;
@@ -433,6 +435,7 @@ void firstplay(char *opponent,int sockfd)
 				{
 					printf("You have surrendered. Player %s win this game\n",opponent );
 					strcpy(msg,makeEndMessage(FOLD));
+					getchar();
 					printf("Press something to exit:....");
 					gets(msg);
 					return;
@@ -449,6 +452,7 @@ void firstplay(char *opponent,int sockfd)
 			{
 				printf("Player %s have surrendered. You win this game. \n",opponent);
 				printf("Your score is %d\n",chip + bet[1]);
+				getchar();
 				printf("Press something to exit:....");
 				gets(msg);
 				return;
@@ -475,6 +479,7 @@ void firstplay(char *opponent,int sockfd)
 				{
 					printf("Draw. Your score is %d\n",chip);
 				}
+				getchar();
 				printf("Press something to exit:....");
 				gets(msg);
 				return;
@@ -549,6 +554,7 @@ void secondplay(char *opponent,int sockfd)
 						printf("Draw. Your score is %d\n",chip);
 					}
 					printf("Press something to exit:....");
+					while(getchar()!='\n');
 					gets(msg);
 					return;
 				}
@@ -571,6 +577,7 @@ void secondplay(char *opponent,int sockfd)
 				printf("Player %s have surrendered. You win this game. \n",opponent);
 				printf("Your score is %d\n",chip + bet[1]);
 				printf("Press something to exit:....");
+				while(getchar()!='\n');
 				gets(msg);
 				return;
 			}
@@ -609,7 +616,9 @@ void secondplay(char *opponent,int sockfd)
 		{
 			printf("You have surrendered. The winner is %s\n",opponent );
 			strcpy(msg,makeEndMessage(FOLD));
+			send(sockfd,msg,strlen(msg),0);
 			printf("Press something to exit:....");
+			getchar();
 			gets(msg);
 			return;
 		}

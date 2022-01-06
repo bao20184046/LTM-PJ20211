@@ -25,14 +25,14 @@ void LoadUser()
 {
 	FILE *file = fopen("user.txt","r");
 	char username[30],password[20],nickname[20];
-	headUser = makeList();
 	while(!feof(file))
 	{
 		fscanf(file,"%s %s %s\n",username,password,nickname);
-		pushUser(headUser,username,password,nickname);
+		pushUser(&headUser,username,password,nickname);
 	}
 	fclose(file);
 }
+
 void updateUser()
 {
 	FILE* file = fopen("user.txt","w");
@@ -43,6 +43,7 @@ void updateUser()
 		temp=temp->next;
 	}
 	fprintf(file,"%s %s %s",temp->username,temp->password,temp->nickname);
+	fclose(file);
 }
 
 void fds_add(int fds[],int fd)
@@ -93,7 +94,7 @@ int processSignUpRequest(char *msg,char *nick)
 	}
 	nickname[j] = '\0';
 	strcpy(nick,nickname);
-	pushUser(headUser,username,password,nickname);
+	pushUser(&headUser,username,password,nickname);
 	return 1;
 }
 int findOpponentBySocket(int socket)
@@ -425,7 +426,6 @@ char *makeEndRes(int winner,int id, int mine)
 		i++;
 	}
 	str[i] = '\0';
-	printf("%s\n",str );
 	return str;
 }
 int main()
