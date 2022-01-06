@@ -234,6 +234,7 @@ int* processOpponentAction(char* msg)
 	memset(result,0,sizeof(result)); 
 	if(msg[0] == '0' + END_RES)
 	{
+		printf("%s\n", msg);
 		result[0] = ENDGAME;
 		if(msg[2] == '-')
 		{
@@ -255,6 +256,7 @@ int* processOpponentAction(char* msg)
 			result[3] +=msg[i] - '0';
 			i++;
 		}
+		printf("%d\n",result[3] );
 	}
 	else
 	{
@@ -283,8 +285,7 @@ void firstplay(char *opponent,int sockfd)
 	int _continue = 1,count = 0;
 	int *recive = (int*)calloc(4,sizeof(int));
 	char *msg = (char*)calloc(MSG_SIZE,sizeof(char));
-	int newRound = 0;
-	drawTable(Round);	
+	int newRound = 0;		
 	while(_continue > 0)
 	{
 		if(count == 2)
@@ -319,11 +320,14 @@ void firstplay(char *opponent,int sockfd)
 				{
 					printf("Draw. Your score is %d\n",chip);
 				}
+				printf("Press something to exit:....");
+				gets(msg);
 				return;
 			}
 			drawTable(Round);
 			count = 0;
 		}
+		drawTable(Round);
 		drawHand();
 		highbet = bet[0] >= bet[1] ? bet[0] : bet[1];
 		memset(msg,0,sizeof(msg));
@@ -331,6 +335,12 @@ void firstplay(char *opponent,int sockfd)
 		printf("Your chip is: %d\n",chip);
 		printf("Enter your new bet(enter -1 to fold):  ");
 		scanf("%d",&newbet);
+		if(newbet == -1)
+		{
+			printf("You have surrendered. The winner is %s\n",opponent );
+			strcpy(msg,makeEndMessage(FOLD));
+			return;
+		}
 		while(newbet < bet[0]||newbet > chip)
 		{
 			if(newbet < bet[0])
@@ -344,29 +354,20 @@ void firstplay(char *opponent,int sockfd)
 			printf("Enter your new bet(enter -1 to fold):  ");
 			scanf("%d",&newbet);			
 		}
-		if(newbet == -1)
+		bet[0] = newbet;
+		if(newbet == chip)
 		{
-			printf("You have surrendered. The winner is %s\n",opponent );
-			strcpy(msg,makeEndMessage(FOLD));
-			return;
+			printf("You're all in. The opponent is forced to all in or surrender.\n");			
+			newbet = -2;
 		}
-		else
-		{
-			bet[0] = newbet;
-			if(newbet == chip)
-			{
-				printf("You're all in. The opponent is forced to all in or surrender.\n");			
-				newbet = -2;
-			}
-			else if(newbet == 0 && highbet == 0)
-				printf("You check\n");
-			else if(newbet !=0 && highbet == 0)
-				printf("You bet\n");
-			else if(newbet == highbet)
-				printf("You call\n");
-			else if(newbet > highbet)
-				printf("You raise\n");
-		}
+		else if(newbet == 0 && highbet == 0)
+			printf("You check\n");
+		else if(newbet !=0 && highbet == 0)
+			printf("You bet\n");
+		else if(newbet == highbet)
+			printf("You call\n");
+		else if(newbet > highbet)
+			printf("You raise\n");
 		if(newRound ==0)
 			strcpy(msg,makeBetMessage(newbet));
 		else {
@@ -383,6 +384,8 @@ void firstplay(char *opponent,int sockfd)
 			{
 				printf(" Player %s have surrendered. You win this game.\n",opponent );
 				printf("Your score is %d\n",chip + bet[1]);
+				printf("Press something to exit:....");
+				gets(msg);
 				return;
 			}
 			if(recive[1] == -2)
@@ -422,12 +425,16 @@ void firstplay(char *opponent,int sockfd)
 					{
 						printf("Draw. Your score is %d\n",chip);
 					}
+					printf("Press something to exit:....");
+					gets(msg);
 					return;
 				}
 				else
 				{
 					printf("You have surrendered. Player %s win this game\n",opponent );
 					strcpy(msg,makeEndMessage(FOLD));
+					printf("Press something to exit:....");
+					gets(msg);
 					return;
 				}
 			}
@@ -442,6 +449,8 @@ void firstplay(char *opponent,int sockfd)
 			{
 				printf("Player %s have surrendered. You win this game. \n",opponent);
 				printf("Your score is %d\n",chip + bet[1]);
+				printf("Press something to exit:....");
+				gets(msg);
 				return;
 			}
 			else
@@ -466,9 +475,12 @@ void firstplay(char *opponent,int sockfd)
 				{
 					printf("Draw. Your score is %d\n",chip);
 				}
+				printf("Press something to exit:....");
+				gets(msg);
 				return;
 			}
 		}
+		system("clear");
 		if(bet[0] == bet[1])
 			count++;
 		else count = 0;
@@ -478,22 +490,16 @@ void firstplay(char *opponent,int sockfd)
 void secondplay(char *opponent,int sockfd)
 {
 	int newbet,highbet,rcvsize;
-	int ro = Round;
 	int _continue = 1;
 	int *recive = (int*)calloc(4,sizeof(int));
 	char *msg = (char*)calloc(MSG_SIZE,sizeof(char));
-	drawTable(Round);	
+	system("clear");		
 	while(_continue > 0)
 	{
-
 		printf("Waiting for opponent to reply\n");
 		rcvsize = recv(sockfd,msg,MSG_SIZE,0);
 		recive = processOpponentAction(msg);
-		if(Round !=ro)
-		{
-			drawTable(Round);
-			ro = Round;
-		}
+		drawTable(Round);
 		drawHand();
 		if(recive[0] == RAISE)
 		{
@@ -501,6 +507,8 @@ void secondplay(char *opponent,int sockfd)
 			{
 				printf(" Player %s have surrendered. You win this game.\n",opponent );
 				printf("Your score is %d\n",chip + bet[1]);
+				printf("Press something to exit:....");
+				gets(msg);
 				return;
 			}
 			if(recive[1] == -2)
@@ -540,6 +548,8 @@ void secondplay(char *opponent,int sockfd)
 					{
 						printf("Draw. Your score is %d\n",chip);
 					}
+					printf("Press something to exit:....");
+					gets(msg);
 					return;
 				}
 				else
@@ -560,6 +570,8 @@ void secondplay(char *opponent,int sockfd)
 			{
 				printf("Player %s have surrendered. You win this game. \n",opponent);
 				printf("Your score is %d\n",chip + bet[1]);
+				printf("Press something to exit:....");
+				gets(msg);
 				return;
 			}
 			else
@@ -593,6 +605,14 @@ void secondplay(char *opponent,int sockfd)
 		printf("Your chip is: %d\n",chip);
 		printf("Enter your new bet(enter -1 to fold):  ");
 		scanf("%d",&newbet);
+		if(newbet == -1)
+		{
+			printf("You have surrendered. The winner is %s\n",opponent );
+			strcpy(msg,makeEndMessage(FOLD));
+			printf("Press something to exit:....");
+			gets(msg);
+			return;
+		}
 		while(newbet < bet[0]||newbet > chip)
 		{
 			if(newbet < bet[0])
@@ -606,31 +626,23 @@ void secondplay(char *opponent,int sockfd)
 			printf("Enter your new bet(enter -1 to fold):  ");
 			scanf("%d",&newbet);			
 		}
-		if(newbet == -1)
+		bet[0] = newbet;
+		if(newbet == chip)
 		{
-			printf("You have surrendered. The winner is %s\n",opponent );
-			strcpy(msg,makeEndMessage(FOLD));
-			return;
+			printf("You're all in. The opponent is forced to all in or surrender.\n");			
+			newbet = -2;
 		}
-		else
-		{
-			bet[0] = newbet;
-			if(newbet == chip)
-			{
-				printf("You're all in. The opponent is forced to all in or surrender.\n");			
-				newbet = -2;
-			}
-			else if(newbet == 0 && highbet == 0)
-				printf("You check\n");
-			else if(newbet !=0 && highbet == 0)
-				printf("You bet\n");
-			else if(newbet == highbet)
-				printf("You call\n");
-			else if(newbet > highbet)
-				printf("You raise\n");
-		}
+		else if(newbet == 0 && highbet == 0)
+			printf("You check\n");
+		else if(newbet !=0 && highbet == 0)
+			printf("You bet\n");
+		else if(newbet == highbet)
+			printf("You call\n");
+		else if(newbet > highbet)
+			printf("You raise\n");
 		strcpy(msg,makeBetMessage(newbet));
 		send(sockfd,msg,strlen(msg),0);
+		system("clear");
 	}
 }
 int main()
@@ -704,6 +716,7 @@ int main()
 			}
 		}
 	}
+	system("clear");
 	printf("Login successfully. Welcome %s\n",nickname );
 	while(isLoged_in == 1)
 	{
@@ -725,12 +738,11 @@ int main()
 				showIDCreatedRoom(msg);
 				printf("Please wait for another player to enter the room.\n");
 				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
-				printf("%d\n",rcvsize );
-				msg[rcvsize] = '\0';
 				configOpponent(msg,opponent);
 				setPlay();
 				setHandCard(msg);
-				firstplay(opponent,sockfd);
+				firstplay(opponent,sockfd);				
+				system("clear");
 				break;
 			}
 			case 2:
@@ -760,6 +772,7 @@ int main()
 					printf("Wrong password\n");
 				if(msg[2]=='0' + ROOM_NEXIST)
 					printf("Room does not exist\n");
+				system("clear");
 				break;
 			}
 			case 3:

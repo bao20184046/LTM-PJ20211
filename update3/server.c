@@ -29,11 +29,20 @@ void LoadUser()
 	while(!feof(file))
 	{
 		fscanf(file,"%s %s %s\n",username,password,nickname);
-		if(feof(file))
-			break;
 		pushUser(headUser,username,password,nickname);
 	}
 	fclose(file);
+}
+void updateUser()
+{
+	FILE* file = fopen("user.txt","w");
+	User *temp = headUser;
+	while(temp->next!=NULL)
+	{
+		fprintf(file,"%s %s %s\n",temp->username,temp->password,temp->nickname);
+		temp=temp->next;
+	}
+	fprintf(file,"%s %s %s",temp->username,temp->password,temp->nickname);
 }
 
 void fds_add(int fds[],int fd)
@@ -409,13 +418,14 @@ char *makeEndRes(int winner,int id, int mine)
 	}
 	str[i++] = ' ';
 	j = i;
-	sprintf(temp,"%d",card1);
-	while(i-4 < strlen(temp))
+	sprintf(temp,"%d",card2);
+	while(i-j < strlen(temp))
 	{
-		str[i] = temp[i-4];
+		str[i] = temp[i-j];
 		i++;
 	}
 	str[i] = '\0';
+	printf("%s\n",str );
 	return str;
 }
 int main()
@@ -450,7 +460,7 @@ int main()
     {
 	  	fds[i]=-1;
     }
-	
+	LoadUser();
 	//Add a file descriptor to the fds array
     fds_add(fds,sockfd);
 	while(1)
@@ -522,7 +532,6 @@ int main()
 					else   //Receive data recv when an existing client sends data
 					{
 						char buff[128]={0};
-						LoadUser();
 						int res=recv(fds[i],buff,127,0);
 						if(res<=0)
 						{
@@ -544,6 +553,7 @@ int main()
 									}
 									else {
 										send(fds[i],signIUResMessage(REG_RES,SUCCESS_SIGNUP,nickname),25,0);
+										updateUser();
 									}
 									break;
 								}
@@ -615,6 +625,9 @@ int main()
 											send(fds[i],makeEndRes(ruler,idd,2),20,0);
 											send(fds[i2],makeEndRes(ruler,idd,1),20,0);
 										}
+										removeRoom(headRoom,idd);
+										Link[idd].i1 = 0;
+										Link[idd].i2 = 0;
 									} 
 									break;
 								}
