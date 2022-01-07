@@ -8,8 +8,9 @@
 #include<arpa/inet.h>
 #include "protocol.h"
 #include "card.h"
+#include "handcard.h"
 Card card[7];
-Card opponentcard[2];
+Card opponentcard[7];
 int bet[2];
 int Round;
 int chip;
@@ -67,6 +68,7 @@ void setHandCard(char *msg)
 		while(i < 5)
 		{
 			card[i] = newcard(value[i+2]);
+			opponentcard[i] = newcard(value[i+2]);
 			i++;
 		}
 		card[5] = newcard(value[0]);
@@ -77,6 +79,10 @@ void setHandCard(char *msg)
 		while(i < 7)
 		{
 			card[i] = newcard(value[i]);
+			if(i < 5)
+			{
+				opponentcard[i] = newcard(value[i]);
+			}
 			i++;
 		}
 	}	
@@ -134,8 +140,8 @@ void drawHand()
 void drawOpponentHand()
 {
 	printf("------------------\n");
-	printf("|%s\t| |%s\t|\n",opponentcard[0].showvalue,opponentcard[1].showvalue);
-	printf("|%s\t| |%s\t|\n",opponentcard[0].showtype,opponentcard[1].showtype);
+	printf("|%s\t| |%s\t|\n",opponentcard[5].showvalue,opponentcard[6].showvalue);
+	printf("|%s\t| |%s\t|\n",opponentcard[5].showtype,opponentcard[6].showtype);
 	printf("------------------\n");
 }
 char *getNickName(char *msg)
@@ -282,6 +288,7 @@ void firstplay(char *opponent,int sockfd)
 	int _continue = 1,count = 0;
 	int *recive = (int*)calloc(4,sizeof(int));
 	char *msg = (char*)calloc(MSG_SIZE,sizeof(char));
+	int result;
 	int newRound = 0;		
 	while(_continue > 0)
 	{
@@ -296,27 +303,24 @@ void firstplay(char *opponent,int sockfd)
 				send(sockfd,msg,strlen(msg),0);
 				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
 				recive = processOpponentAction(msg);
-				opponentcard[0] = newcard(recive[2]);
-				opponentcard[1] = newcard(recive[3]);
+				opponentcard[5] = newcard(recive[2]);
+				opponentcard[6] = newcard(recive[3]);
 				printf("GAME RESULT:\n");
 				drawTable(4);
 				printf("Your hand:\n");
 				drawHand();
 				printf("%s's hand:\n",opponent);
 				drawOpponentHand();
-				if(recive[1] == 1)
+				result = handCompare(calculate(card),calculate(opponentcard));
+				if(result>0)
 				{
 					printf("You win this game. Your score is %d\n",chip + bet[1]);
 				}
-				else if(recive[1] == 2)
+				else if(result<0)
 				{
 					printf("Player %s win this game\n",opponent);
-					
 				}
-				else
-				{
-					printf("Draw. Your score is %d\n",chip);
-				}
+				else printf("Draw. Your score is %d\n",chip);
 				getchar();
 				printf("Press something to exit:....");
 				gets(msg);
@@ -341,9 +345,9 @@ void firstplay(char *opponent,int sockfd)
 			send(sockfd,msg,strlen(msg),0);
 			return;
 		}
-		while(newbet < bet[0]||newbet > chip)
+		while(newbet < highbet||newbet > chip)
 		{
-			if(newbet < bet[0])
+			if(newbet < highbet)
 			{
 				printf("Bet must be at least %d\n",bet[0]);
 			}
@@ -406,26 +410,24 @@ void firstplay(char *opponent,int sockfd)
 					send(sockfd,msg,strlen(msg),0);
 					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
 					recive = processOpponentAction(msg);
-					opponentcard[0] = newcard(recive[2]);
-					opponentcard[1] = newcard(recive[3]);
+					opponentcard[5] = newcard(recive[2]);
+					opponentcard[6] = newcard(recive[3]);
 					printf("GAME RESULT:\n");
 					drawTable(4);
 					printf("Your hand:\n");
 					drawHand();
 					printf("%s's hand:\n",opponent);
 					drawOpponentHand();
-					if(recive[1] == 1)
+					result = handCompare(calculate(card),calculate(opponentcard));
+					if(result>0)
 					{
-						printf("You win this game. You score is %d\n",2*chip);
+						printf("You win this game. Your score is %d\n",2*chip);
 					}
-					else if(recive[1] == 2)
+					else if(result<0)
 					{
-						printf("Player %s win this game.\n",opponent);
+						printf("Player %s win this game\n",opponent);
 					}
-					else
-					{
-						printf("Draw. Your score is %d\n",chip);
-					}
+					else printf("Draw. Your score is %d\n",chip);
 					getchar();
 					printf("Press something to exit:....");
 					gets(msg);
@@ -467,18 +469,16 @@ void firstplay(char *opponent,int sockfd)
 				drawHand();
 				printf("%s's hand:\n",opponent);
 				drawOpponentHand();
-				if(recive[1] == 1)
+				result = handCompare(calculate(card),calculate(opponentcard));
+				if(result>0)
 				{
-					printf("You win this game. You score is %d\n",2*chip);
+					printf("You win this game. Your score is %d\n",chip + bet[1]);
 				}
-				else if(recive[1] == 2)
+				else if(result<0)
 				{
-					printf("Player %s win this game.\n",opponent);
+					printf("Player %s win this game\n",opponent);
 				}
-				else
-				{
-					printf("Draw. Your score is %d\n",chip);
-				}
+				else printf("Draw. Your score is %d\n",chip);
 				getchar();
 				printf("Press something to exit:....");
 				gets(msg);
@@ -498,6 +498,7 @@ void secondplay(char *opponent,int sockfd)
 	int _continue = 1;
 	int *recive = (int*)calloc(4,sizeof(int));
 	char *msg = (char*)calloc(MSG_SIZE,sizeof(char));
+	int result;
 	system("clear");		
 	while(_continue > 0)
 	{
@@ -533,28 +534,26 @@ void secondplay(char *opponent,int sockfd)
 					send(sockfd,msg,strlen(msg),0);
 					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
 					recive = processOpponentAction(msg);
-					opponentcard[0] = newcard(recive[2]);
-					opponentcard[1] = newcard(recive[3]);
+					opponentcard[5] = newcard(recive[2]);
+					opponentcard[6] = newcard(recive[3]);
 					printf("GAME RESULT:\n");
 					drawTable(4);
 					printf("Your hand:\n");
 					drawHand();
 					printf("%s's hand:\n",opponent);
 					drawOpponentHand();
-					if(recive[1] == 2)
+					result = handCompare(calculate(card),calculate(opponentcard));
+					if(result>0)
 					{
-						printf("You win this game. You score is %d\n",2*chip);
+						printf("You win this game. Your score is %d\n",chip + bet[1]);
 					}
-					else if(recive[1] == 1)
+					else if(result<0)
 					{
-						printf("Player %s win this game.\n",opponent);
+						printf("Player %s win this game\n",opponent);
 					}
-					else
-					{
-						printf("Draw. Your score is %d\n",chip);
-					}
+					else printf("Draw. Your score is %d\n",chip);
+					getchar();
 					printf("Press something to exit:....");
-					while(getchar()!='\n');
 					gets(msg);
 					return;
 				}
@@ -591,18 +590,19 @@ void secondplay(char *opponent,int sockfd)
 				drawHand();
 				printf("%s's hand:\n",opponent);
 				drawOpponentHand();
-				if(recive[1] == 1)
+				result = handCompare(calculate(card),calculate(opponentcard));
+				if(result>0)
 				{
-					printf("You win this game. You score is %d\n",2*chip);
+					printf("You win this game. Your score is %d\n",chip + bet[1]);
 				}
-				else if(recive[1] == 2)
+				else if(result<0)
 				{
-					printf("Player %s win this game.\n",opponent);
+					printf("Player %s win this game\n",opponent);
 				}
-				else
-				{
-					printf("Draw. Your score is %d\n",chip);
-				}
+				else printf("Draw. Your score is %d\n",chip);
+				getchar();
+				printf("Press something to exit:....");
+				gets(msg);
 				return;
 			}
 		}
@@ -622,9 +622,9 @@ void secondplay(char *opponent,int sockfd)
 			gets(msg);
 			return;
 		}
-		while(newbet < bet[0]||newbet > chip)
+		while(newbet < highbet||newbet > chip)
 		{
-			if(newbet < bet[0])
+			if(newbet < highbet)
 			{
 				printf("Bet must be at least %d\n",bet[0]);
 			}
