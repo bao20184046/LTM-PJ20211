@@ -437,6 +437,7 @@ void firstplay(char *opponent,int sockfd)
 				{
 					printf("You have surrendered. Player %s win this game\n",opponent );
 					strcpy(msg,makeEndMessage(FOLD));
+					send(sockfd,msg,strlen(msg),0);
 					getchar();
 					printf("Press something to exit:....");
 					gets(msg);
@@ -562,6 +563,10 @@ void secondplay(char *opponent,int sockfd)
 				{
 					printf("You have surrendered. Player %s win this game\n",opponent );
 					strcpy(msg,makeEndMessage(FOLD));
+					send(sockfd,msg,strlen(msg),0);
+					printf("Press something to exit:....");
+					getchar();
+					gets(msg);
 					return;
 				}
 			}
@@ -577,7 +582,7 @@ void secondplay(char *opponent,int sockfd)
 				printf("Player %s have surrendered. You win this game. \n",opponent);
 				printf("Your score is %d\n",chip + bet[1]);
 				printf("Press something to exit:....");
-				while(getchar()!='\n');
+				getchar();
 				gets(msg);
 				return;
 			}
