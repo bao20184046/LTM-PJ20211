@@ -349,7 +349,7 @@ void firstplay(char *opponent,int sockfd)
 		{
 			if(newbet < highbet)
 			{
-				printf("Bet must be at least %d\n",bet[0]);
+				printf("Bet must be at least %d\n",highbet);
 			}
 			else
 			{
@@ -461,8 +461,8 @@ void firstplay(char *opponent,int sockfd)
 			}
 			else
 			{
-				opponentcard[0] = newcard(recive[2]);
-				opponentcard[1] = newcard(recive[3]);
+				opponentcard[5] = newcard(recive[2]);
+				opponentcard[6] = newcard(recive[3]);
 				printf("GAME RESULT:\n");
 				drawTable(4);
 				printf("Your hand:\n");
@@ -505,6 +505,7 @@ void secondplay(char *opponent,int sockfd)
 		printf("Waiting for opponent to reply\n");
 		rcvsize = recv(sockfd,msg,MSG_SIZE,0);
 		recive = processOpponentAction(msg);
+		system("clear");
 		drawTable(Round);
 		drawHand();
 		if(recive[0] == RAISE)
@@ -582,8 +583,8 @@ void secondplay(char *opponent,int sockfd)
 			}
 			else
 			{
-				opponentcard[0] = newcard(recive[2]);
-				opponentcard[1] = newcard(recive[3]);
+				opponentcard[5] = newcard(recive[2]);
+				opponentcard[6] = newcard(recive[3]);
 				printf("GAME RESULT:\n");
 				drawTable(4);
 				printf("Your hand:\n");
@@ -626,7 +627,7 @@ void secondplay(char *opponent,int sockfd)
 		{
 			if(newbet < highbet)
 			{
-				printf("Bet must be at least %d\n",bet[0]);
+				printf("Bet must be at least %d\n",highbet);
 			}
 			else
 			{
@@ -651,7 +652,6 @@ void secondplay(char *opponent,int sockfd)
 			printf("You raise\n");
 		strcpy(msg,makeBetMessage(newbet));
 		send(sockfd,msg,strlen(msg),0);
-		system("clear");
 	}
 }
 int main()
