@@ -14,5 +14,5 @@ gcc -o client client.c protocol.c
 ```
 ### Run client in update3:
 ```
-gcc -o client client.c protocol.c card.c
+gcc -o client client.c protocol.c card.c handcard.c
 ```
