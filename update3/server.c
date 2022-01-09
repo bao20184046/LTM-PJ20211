@@ -59,7 +59,7 @@ void fds_add(int fds[],int fd)
 	}
 }
 //0username password nickname
-int processSignUpRequest(char *msg,char *nick)
+int processSignUp(char *msg,char *nick)
 {
 	char *username = (char*)calloc(30,sizeof(char));
 	char *password = (char*)calloc(20,sizeof(char));
@@ -97,7 +97,7 @@ int processSignUpRequest(char *msg,char *nick)
 	pushUser(&headUser,username,password,nickname);
 	return 1;
 }
-int findOpponentBySocket(int socket)
+int getOpponentIndex(int socket)
 {
 	for(int i = 1; i < 20; i++)
 	{
@@ -108,7 +108,7 @@ int findOpponentBySocket(int socket)
 	}
 	return 0;
 }
-int processSignInRequest(char *msg,char *nick)
+int processSignIn(char *msg,char *nick)
 {
 	char *username = (char*)calloc(30,sizeof(char));
 	char *password = (char*)calloc(20,sizeof(char));
@@ -144,7 +144,7 @@ int processSignInRequest(char *msg,char *nick)
 	strcpy(nick,loginUser->nickname);
 	return 2;
 }
-char *signIUResMessage(RES_TYPE type,VALUE_RES res,char *nickname)
+char *signIURes(RES_TYPE type,VALUE_RES res,char *nickname)
 {
 	char *msg = (char*)calloc(25,sizeof(char));
 	int i = 4;
@@ -160,7 +160,7 @@ char *signIUResMessage(RES_TYPE type,VALUE_RES res,char *nickname)
 	msg[i] = '\0';
 	return msg;
 }
-char *listRoomMessage()
+char *listRoomRes()
 {
 	int temp,i = 0;
 	char *str = (char*)calloc(20,sizeof(char));
@@ -184,7 +184,7 @@ char *listRoomMessage()
 	str[i-1] = '\0';
 	return str;
 }
-char *createRoomResMessage(int ruler)
+char *createRoomRes(int ruler)
 {
 	int i = 2,id = ruler;
 	char *msg = (char*)calloc(6,sizeof(char));
@@ -198,7 +198,7 @@ char *createRoomResMessage(int ruler)
 	msg[i] = '\0';
 	return msg;
 }
-int getLinkBySocket(int socket)
+int getIdbyIndex(int socket)
 {
 	for(int i = 1; i < 20; i++)
 	{
@@ -207,7 +207,7 @@ int getLinkBySocket(int socket)
 	}
 	return 0;
 }
-int processEndRequest(char *msg,int id)
+int processEnd(char *msg,int id)
 {
 	int type = msg[2] - '0';
 	if(type == FOLD)
@@ -234,7 +234,7 @@ int processEndRequest(char *msg,int id)
 	else if(handCompare(r->player[0].hand,r->player[0].hand)<0) return 2;
 	else return 0;
 }
-int processCreateRoomRequest(char *msg)
+int processCreateRoom(char *msg)
 {
 	int j,i = 4,status = msg[2]-'0';
 	int id;
@@ -257,7 +257,6 @@ int processCreateRoomRequest(char *msg)
 			i++;
 		}
 		password[i-j] = '\0';
-		printf("%s\n",password );
 		id = pushRoom(&headRoom,1,password,p);
 		return id;
 	}
@@ -266,7 +265,7 @@ int processCreateRoomRequest(char *msg)
 	return id;
 }
 
-int processJoinRoomRequest(char *msg)
+int processJoinRoom(char *msg)
 {
 	int id=0,i = 2,j;
 	char *nickname = (char*)calloc(20,sizeof(char));
@@ -319,7 +318,7 @@ int processJoinRoomRequest(char *msg)
 	setDeckToRoom(r);
 	return id;
 }
-char *makeJoinNoticeToCreatorMessage(int id)
+char *noticeRes(int id)
 {
 	int i = 2,p;
 	char *str = (char*)calloc(48,sizeof(char));
@@ -347,7 +346,7 @@ char *makeJoinNoticeToCreatorMessage(int id)
 	str[i-1] = '\0';
 	return str;
 }
-char *makeJoinRoomResMessage(VALUE_RES res,int id)
+char *joinRoomRes(VALUE_RES res,int id)
 {
 	int i = 4,j;
 	char *str = (char*)calloc(50,sizeof(char));
@@ -436,9 +435,7 @@ int main()
 	int ruler;
 	int *result = (int*)calloc(3,sizeof(int));
 	char *nickname = (char*)calloc(20,sizeof(char));
-	headRoom = makeListRoom();
-    printf("sockfd=%d\n",sockfd);
-    
+	headRoom = makeListRoom();    
 	struct sockaddr_in saddr,caddr;
 	memset(&saddr,0,sizeof(saddr));
 	saddr.sin_family=AF_INET;
@@ -526,7 +523,6 @@ int main()
 							continue;
 						}
 					
-						printf("accept c=%d\n",c);
 						fds_add(fds,c);//Add the connection socket to the array where the file descriptor is stored
 					}
 					else   //Receive data recv when an existing client sends data
@@ -546,69 +542,68 @@ int main()
 							{
 								case REGISTER:
 								{
-									ruler = processSignUpRequest(buff,nickname);
+									ruler = processSignUp(buff,nickname);
 									if(ruler == 0)
 									{
-										send(fds[i],signIUResMessage(REG_RES,EXISTED,nickname),25,0);
+										send(fds[i],signIURes(REG_RES,EXISTED,nickname),25,0);
 									}
 									else {
-										send(fds[i],signIUResMessage(REG_RES,SUCCESS_SIGNUP,nickname),25,0);
+										send(fds[i],signIURes(REG_RES,SUCCESS_SIGNUP,nickname),25,0);
 										updateUser();
 									}
 									break;
 								}
 								case LOGIN:
 								{
-									ruler = processSignInRequest(buff,nickname);
+									ruler = processSignIn(buff,nickname);
 									if(ruler == 0)
 									{
-										send(fds[i],signIUResMessage(LOG_RES,NOT_EXIST,nickname),25,0);
+										send(fds[i],signIURes(LOG_RES,NOT_EXIST,nickname),25,0);
 									} else if(ruler == 1)
 									{
-										send(fds[i],signIUResMessage(LOG_RES,WRONG_PASS,nickname),25,0);
-									}else send(fds[i],signIUResMessage(LOG_RES,SUCCESS_SIGNIN,nickname),25,0);
-									printf("%d\n",i );
+										send(fds[i],signIURes(LOG_RES,WRONG_PASS,nickname),25,0);
+									}else send(fds[i],signIURes(LOG_RES,SUCCESS_SIGNIN,nickname),25,0);
 									break;
 								}
 								case CREATEROOM:
 								{
-									ruler = processCreateRoomRequest(buff);
-									send(fds[i],createRoomResMessage(ruler),6,0);
+									ruler = processCreateRoom(buff);
+									send(fds[i],createRoomRes(ruler),6,0);
 									Link[ruler].i1 = i;
 									break;
 								}
 								case GETLIST:
 								{
-									send(fds[i],listRoomMessage(),20,0);
+									send(fds[i],listRoomRes(),20,0);
 									break;
 								}
 								case JOINROOM:
 								{
-									ruler = processJoinRoomRequest(buff);
+									ruler = processJoinRoom(buff);
 									if(ruler==0)
-										send(fds[i],makeJoinRoomResMessage(ROOM_NEXIST,ruler),6,0);
+										send(fds[i],joinRoomRes(ROOM_NEXIST,ruler),6,0);
 									else if(ruler==-1)
-										send(fds[i],makeJoinRoomResMessage(FULL_SLOT,ruler),6,0);
+										send(fds[i],joinRoomRes(FULL_SLOT,ruler),6,0);
 									else if(ruler==-2)
-										send(fds[i],makeJoinRoomResMessage(WRONG_RPASS,ruler),6,0);
+										send(fds[i],joinRoomRes(WRONG_RPASS,ruler),6,0);
 									else{
 										Link[ruler].i2 = i;
-										send(fds[i],makeJoinRoomResMessage(JOIN_SUCCESS,ruler),50,0);
-										send(fds[Link[ruler].i1],makeJoinNoticeToCreatorMessage(ruler),48,0);
+										send(fds[i],joinRoomRes(JOIN_SUCCESS,ruler),50,0);
+										send(fds[Link[ruler].i1],noticeRes(ruler),48,0);
 									} 
 									break;
 								}
 								case RAISE:
 								{
-									int i2 = findOpponentBySocket(i); 
+									int i2 = getOpponentIndex(i); 
 									send(fds[i2],buff,res+1,0);
 									break;
 								}
 								case ENDGAME:
 								{
-									int idd = getLinkBySocket(i);
+									int idd = getIdbyIndex(i);
 									int i2 = Link[idd].i1 == i ? Link[idd].i2 : Link[idd].i1;
-									ruler = processEndRequest(buff,idd);
+									ruler = processEnd(buff,idd);
 									if(ruler == -1)
 									{
 										send(fds[i2],makeEndRes(ruler,idd,0),20,0);

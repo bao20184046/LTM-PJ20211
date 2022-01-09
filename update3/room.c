@@ -4,14 +4,13 @@
 Room *makeListRoom()
 {
 	Room *new = (Room*)calloc(1,sizeof(struct box));
-	memset(new,0,sizeof(new));
+	memset(new,0,sizeof(struct box));
 	return new;
 }
 Player newPlayer(char* nickname,int chip)
 {
 	Player new;
 	strcpy(new.nickname,nickname);
-	new.chip = chip;
 	return new;
 }
 
@@ -46,31 +45,13 @@ void setDeckToRoom(Room *room)
 		room->deck[i] = deck[i];
 	}
 }
-int checkRoom(Room *room)
-{
-	if(room->player[0].chip==0)
-	{
-		printf("Player %s failed\n", room->player[0].nickname);
-		return 2;
-	}
-	if(room->player[1].chip==0)
-	{
-		printf("Player %s failed\n", room->player[1].nickname);
-		return 1;
-	}
-	return 0;
-}
-void showPlayer(Room *room)
-{
-	printf("Player %s: %dVND\n",room->player[0].nickname,room->player[0].chip);
-	printf("Player %s: %dVND\n",room->player[1].nickname,room->player[1].chip);
-}
+
 
 
 Room *newRoom(int status, char* password, Player creator_room)
 {
 	Room *new = (Room*)malloc(sizeof(Room));
-	memset(new,0,sizeof(new));
+	memset(new,0,sizeof(struct box));
 	new->status = status;
 	new->canPlay = 0;
 	strcpy(new->password,password);
@@ -109,7 +90,6 @@ void removeRoom(Room *headRoom, int id)
 		headRoom = headRoom->next;
 		if(headRoom == NULL)
 			headRoom = makeListRoom();
-		headRoom->id = 0;
 		printf("Delete head\n");
 	}
 	else if(r->next == NULL)

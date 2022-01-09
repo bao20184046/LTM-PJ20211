@@ -227,8 +227,6 @@ void configOpponent2(char *msg,char *opponent)
 	}
 	opponent[i - j] = '\0';
 }
-//ENDGAME playerwin la1 la2
-//RAISE bet
 int* processOpponentAction(char* msg)
 {
 	int i = 2;
