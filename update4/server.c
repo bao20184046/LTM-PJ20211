@@ -273,6 +273,58 @@ int processCreateRoom(char *msg)
 	id = pushRoom(&headRoom,0,password,p);
 	return id;
 }
+void processPlusScore(char *msg)
+{
+	printf("1\n");
+	int i = 2,plus =0;
+	char *nickname = (char*)calloc(20,sizeof(char));
+	while(msg[i]!=' ')
+	{
+		nickname[i-2] = msg[i];
+		i++;
+	}
+	nickname[i-2] = '\0';
+	printf("%s\n",nickname );
+	User *user = getUserByNickName(headUser,nickname);
+	i++;
+	while(i < strlen(msg))
+	{
+		plus*=10;
+		plus+= msg[i] - '0';
+		i++;
+	}
+	printf("%d\n",plus );
+	user->score+=plus;
+}
+int processGetScore(char *msg)
+{
+	int i = 2;
+	char *nickname = (char*)calloc(20,sizeof(char));
+	while(i < strlen(msg))
+	{
+		nickname[i-2] = msg[i];
+		i++;
+	}
+	nickname[i-2] = '\0';
+	User *user = getUserByNickName(headUser,nickname);
+	return user->score;
+}
+char *scoreMessage(int score)
+{
+	int i = 2;
+	char *str = (char*)calloc(10,sizeof(char));
+	char *temp = (char*)calloc(4,sizeof(char));
+	sprintf(temp,"%d",score);
+	str[0] = '0' + SCORE_RES;
+	str[1] = ' ';
+	while(i-2 <strlen(temp))
+	{
+		str[i] = temp[i-2];
+		i++;
+	}
+	str[i] = '\0';
+	return str;
+}
 
 int processJoinRoom(char *msg)
 {
@@ -633,10 +685,21 @@ int main()
 											send(fds[i],makeEndRes(ruler,idd,2),20,0);
 											send(fds[i2],makeEndRes(ruler,idd,1),20,0);
 										}
-										removeRoom(headRoom,idd);
 										Link[idd].i1 = 0;
 										Link[idd].i2 = 0;
 									} 
+									break;
+								}
+								case PLUS:
+								{
+									processPlusScore(buff);
+									updateUser();
+									break;
+								}
+								case GETSCORE:
+								{
+									ruler = processGetScore(buff);
+									send(fds[i],scoreMessage(ruler),10,0);
 									break;
 								}
 							}

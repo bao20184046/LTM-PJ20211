@@ -20,7 +20,8 @@ void menu()
 	printf("MENU:\n");
 	printf("1. Create room\n");
 	printf("2. Join room\n");
-	printf("3. Log out\n");
+	printf("3. See score\n");
+	printf("4. Log out\n");
 	printf("***************************************\n");
 	printf("Enter your choice:  ");
 }
@@ -31,6 +32,7 @@ void SignIU()
 	printf("Welcome to the world of poker\n");
 	printf("1. Sign in\n");
 	printf("2. Sign up\n");
+	printf("3. Exit\n");
 	printf("***************************************\n");
 	printf("Enter your choice: \n");
 }
@@ -38,7 +40,7 @@ void SignIU()
 void setHandCard(char *msg)
 {
 	memset(card,0,sizeof(card));
-	int start,i = 0,j=0;
+	int i = 0,j=0;
 	int value[7];
 	while(msg[i]!=' ')
 		i++;
@@ -227,12 +229,23 @@ void configOpponent2(char *msg,char *opponent)
 	}
 	opponent[i - j] = '\0';
 }
+int getScore(char *msg)
+{
+	int i = 2;
+	int score = 0;
+	while(i < strlen(msg))
+	{
+		score*=10;
+		score+=msg[i] - '0';
+		i++;
+	}
+	return score;
+}
 int* processOpponentAction(char* msg)
 {
 	int i = 2;
 	int isNegative = 0;
 	int *result = (int*)calloc(4,sizeof(int));
-	memset(result,0,sizeof(result)); 
 	if(msg[0] == '0' + END_RES)
 	{
 		printf("%s\n", msg);
@@ -280,15 +293,15 @@ int* processOpponentAction(char* msg)
 	}
 	return result;
 }
-void firstplay(char *opponent,int sockfd)
+int firstplay(char *opponent,int sockfd)
 {
-	int newbet,highbet,rcvsize;
-	int _continue = 1,count = 0;
+	int newbet,highbet;
+	int count = 0;
 	int *recive = (int*)calloc(4,sizeof(int));
 	char *msg = (char*)calloc(MSG_SIZE,sizeof(char));
 	int result;
 	int newRound = 0;		
-	while(_continue > 0)
+	while(1)
 	{
 		if(count == 2)
 		{
@@ -299,10 +312,11 @@ void firstplay(char *opponent,int sockfd)
 				printf("The bet phase is over\n");
 				strcpy(msg,makeEndMessage(COMMON));
 				send(sockfd,msg,strlen(msg),0);
-				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+				recv(sockfd,msg,MSG_SIZE,0);
 				recive = processOpponentAction(msg);
 				opponentcard[5] = newcard(recive[2]);
 				opponentcard[6] = newcard(recive[3]);
+				system("clear");
 				printf("GAME RESULT:\n");
 				drawTable(4);
 				printf("Your hand:\n");
@@ -313,16 +327,15 @@ void firstplay(char *opponent,int sockfd)
 				if(result>0)
 				{
 					printf("You win this game. Your score is %d\n",chip + bet[1]);
+					return chip + bet[1];
 				}
 				else if(result<0)
 				{
 					printf("Player %s win this game\n",opponent);
+					return chip - bet[0];
 				}
 				else printf("Draw. Your score is %d\n",chip);
-				getchar();
-				printf("Press something to exit:....");
-				gets(msg);
-				return;
+				return chip;
 			}
 			drawTable(Round);
 			count = 0;
@@ -341,7 +354,7 @@ void firstplay(char *opponent,int sockfd)
 			printf("You have surrendered. The winner is %s\n",opponent );
 			strcpy(msg,makeEndMessage(FOLD));
 			send(sockfd,msg,strlen(msg),0);
-			return;
+			return 0;
 		}
 		while(newbet < highbet||newbet > chip)
 		{
@@ -378,7 +391,7 @@ void firstplay(char *opponent,int sockfd)
 		}
 		send(sockfd,msg,strlen(msg),0);
 		printf("Waiting for opponent to reply\n");
-		rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+		recv(sockfd,msg,MSG_SIZE,0);
 		recive = processOpponentAction(msg);
 		if(recive[0] == RAISE)
 		{
@@ -386,10 +399,7 @@ void firstplay(char *opponent,int sockfd)
 			{
 				printf(" Player %s have surrendered. You win this game.\n",opponent );
 				printf("Your score is %d\n",chip + bet[1]);
-				getchar();
-				printf("Press something to exit:....");
-				gets(msg);
-				return;
+				return chip + bet[1];
 			}
 			if(recive[1] == -2)
 			{
@@ -406,10 +416,11 @@ void firstplay(char *opponent,int sockfd)
 					printf("You're All-in.\n");
 					strcpy(msg,makeEndMessage(ALLIN));
 					send(sockfd,msg,strlen(msg),0);
-					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+					recv(sockfd,msg,MSG_SIZE,0);
 					recive = processOpponentAction(msg);
 					opponentcard[5] = newcard(recive[2]);
 					opponentcard[6] = newcard(recive[3]);
+					system("clear");
 					printf("GAME RESULT:\n");
 					drawTable(4);
 					printf("Your hand:\n");
@@ -420,26 +431,22 @@ void firstplay(char *opponent,int sockfd)
 					if(result>0)
 					{
 						printf("You win this game. Your score is %d\n",2*chip);
+						return 2*chip;
 					}
 					else if(result<0)
 					{
 						printf("Player %s win this game\n",opponent);
+						return 0;
 					}
 					else printf("Draw. Your score is %d\n",chip);
-					getchar();
-					printf("Press something to exit:....");
-					gets(msg);
-					return;
+					return chip;
 				}
 				else
 				{
 					printf("You have surrendered. Player %s win this game\n",opponent );
 					strcpy(msg,makeEndMessage(FOLD));
 					send(sockfd,msg,strlen(msg),0);
-					getchar();
-					printf("Press something to exit:....");
-					gets(msg);
-					return;
+					return 0;
 				}
 			}
 			else
@@ -453,10 +460,7 @@ void firstplay(char *opponent,int sockfd)
 			{
 				printf("Player %s have surrendered. You win this game. \n",opponent);
 				printf("Your score is %d\n",chip + bet[1]);
-				getchar();
-				printf("Press something to exit:....");
-				gets(msg);
-				return;
+				return chip + bet[1];
 			}
 			else
 			{
@@ -471,17 +475,25 @@ void firstplay(char *opponent,int sockfd)
 				result = handCompare(calculate(card),calculate(opponentcard));
 				if(result>0)
 				{
+					if(newbet == -2)
+					{
+						printf("You win this game. Your score is %d\n",chip*2);
+						return chip*2;
+					}
 					printf("You win this game. Your score is %d\n",chip + bet[1]);
+					return chip + bet[1];
 				}
 				else if(result<0)
 				{
 					printf("Player %s win this game\n",opponent);
+					if(newbet == -2)
+					{
+						return 0;
+					}
+					return chip - bet[0];
 				}
 				else printf("Draw. Your score is %d\n",chip);
-				getchar();
-				printf("Press something to exit:....");
-				gets(msg);
-				return;
+				return chip;
 			}
 		}
 		system("clear");
@@ -491,18 +503,17 @@ void firstplay(char *opponent,int sockfd)
 	}	
 }
 
-void secondplay(char *opponent,int sockfd)
+int secondplay(char *opponent,int sockfd)
 {
-	int newbet,highbet,rcvsize;
-	int _continue = 1;
+	int newbet,highbet;
 	int *recive = (int*)calloc(4,sizeof(int));
 	char *msg = (char*)calloc(MSG_SIZE,sizeof(char));
 	int result;
 	system("clear");		
-	while(_continue > 0)
+	while(1)
 	{
 		printf("Waiting for opponent to reply\n");
-		rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+		recv(sockfd,msg,MSG_SIZE,0);
 		recive = processOpponentAction(msg);
 		system("clear");
 		drawTable(Round);
@@ -515,7 +526,7 @@ void secondplay(char *opponent,int sockfd)
 				printf("Your score is %d\n",chip + bet[1]);
 				printf("Press something to exit:....");
 				gets(msg);
-				return;
+				return chip + bet[1];
 			}
 			if(recive[1] == -2)
 			{
@@ -532,10 +543,11 @@ void secondplay(char *opponent,int sockfd)
 					printf("You're All-in.\n");
 					strcpy(msg,makeEndMessage(ALLIN));
 					send(sockfd,msg,strlen(msg),0);
-					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+					recv(sockfd,msg,MSG_SIZE,0);
 					recive = processOpponentAction(msg);
 					opponentcard[5] = newcard(recive[2]);
 					opponentcard[6] = newcard(recive[3]);
+					system("clear");
 					printf("GAME RESULT:\n");
 					drawTable(4);
 					printf("Your hand:\n");
@@ -545,27 +557,23 @@ void secondplay(char *opponent,int sockfd)
 					result = handCompare(calculate(card),calculate(opponentcard));
 					if(result>0)
 					{
-						printf("You win this game. Your score is %d\n",chip + bet[1]);
+						printf("You win this game. Your score is %d\n",chip*2);
+						return chip*2;
 					}
 					else if(result<0)
 					{
 						printf("Player %s win this game\n",opponent);
+						return 0;
 					}
 					else printf("Draw. Your score is %d\n",chip);
-					getchar();
-					printf("Press something to exit:....");
-					gets(msg);
-					return;
+					return chip;
 				}
 				else
 				{
 					printf("You have surrendered. Player %s win this game\n",opponent );
 					strcpy(msg,makeEndMessage(FOLD));
 					send(sockfd,msg,strlen(msg),0);
-					printf("Press something to exit:....");
-					getchar();
-					gets(msg);
-					return;
+					return 0;
 				}
 			}
 			else
@@ -579,15 +587,13 @@ void secondplay(char *opponent,int sockfd)
 			{
 				printf("Player %s have surrendered. You win this game. \n",opponent);
 				printf("Your score is %d\n",chip + bet[1]);
-				printf("Press something to exit:....");
-				getchar();
-				gets(msg);
-				return;
+				return chip + bet[1];
 			}
 			else
 			{
 				opponentcard[5] = newcard(recive[2]);
 				opponentcard[6] = newcard(recive[3]);
+				system("clear");
 				printf("GAME RESULT:\n");
 				drawTable(4);
 				printf("Your hand:\n");
@@ -597,17 +603,25 @@ void secondplay(char *opponent,int sockfd)
 				result = handCompare(calculate(card),calculate(opponentcard));
 				if(result>0)
 				{
+					if(newbet == -2)
+					{
+						printf("You win this game. Your score is %d\n",chip*2);
+						return chip*2;
+					}
 					printf("You win this game. Your score is %d\n",chip + bet[1]);
+					return chip + bet[1];
 				}
 				else if(result<0)
 				{
 					printf("Player %s win this game\n",opponent);
+					if(newbet == -2)
+					{
+						return 0;
+					}
+					return chip - bet[0];
 				}
 				else printf("Draw. Your score is %d\n",chip);
-				getchar();
-				printf("Press something to exit:....");
-				gets(msg);
-				return;
+				return chip;
 			}
 		}
 		highbet = bet[0] >= bet[1] ? bet[0] : bet[1];
@@ -621,10 +635,7 @@ void secondplay(char *opponent,int sockfd)
 			printf("You have surrendered. The winner is %s\n",opponent );
 			strcpy(msg,makeEndMessage(FOLD));
 			send(sockfd,msg,strlen(msg),0);
-			printf("Press something to exit:....");
-			getchar();
-			gets(msg);
-			return;
+			return 0;
 		}
 		while(newbet < highbet||newbet > chip)
 		{
@@ -666,6 +677,7 @@ int main()
 	char *msg = (char*)calloc(MSG_SIZE,sizeof(char));
 	int choice,isLoged_in = 0;
 	int rcvsize;
+	int plus;
 	//Set Address Information
 	struct sockaddr_in saddr;
 	memset(&saddr,0,sizeof(saddr));
@@ -680,7 +692,7 @@ int main()
 	{
 		SignIU();
 		scanf("%d",&choice);
-		while(choice<1||choice>2)
+		while(choice<1||choice>3)
 		{
 			printf("Invalid selection. Re-enter:  ");
 			scanf("%d",&choice);
@@ -730,6 +742,10 @@ int main()
 				}
 				break;
 			}
+			case 3:
+			{
+				return 0;
+			}
 		}
 	}
 	system("clear");
@@ -738,7 +754,7 @@ int main()
 	{
 		menu();
 		scanf("%d",&choice);
-		while(choice<1||choice>3)
+		while(choice<1||choice>4)
 		{
 			printf("Invalid selection. Re-enter:  ");
 			scanf("%d",&choice);
@@ -757,8 +773,13 @@ int main()
 				configOpponent(msg,opponent);
 				setPlay();
 				setHandCard(msg);
-				firstplay(opponent,sockfd);				
+				plus = firstplay(opponent,sockfd);
+				printf("Please wait 8 seconds to return to the main screen\n");	
+				sleep(8);
 				system("clear");
+				printf("You get %d points added to your account\n",plus);
+				strcpy(msg,makePlusScoreMessage(nickname,plus));
+				send(sockfd,msg,strlen(msg),0);
 				break;
 			}
 			case 2:
@@ -780,18 +801,37 @@ int main()
 					configOpponent2(msg,opponent);
 					setPlay();
 					setHandCard(msg);
-					secondplay(opponent,sockfd);
+					plus = secondplay(opponent,sockfd);
+					printf("Please wait 12 seconds to return to the main screen\n");	
+					sleep(12);
+					system("clear");
+					printf("You get %d points added to your account\n",plus);
+					strcpy(msg,makePlusScoreMessage(nickname,plus));
+					send(sockfd,msg,strlen(msg),0);
 				}
-				if(msg[2]=='0' + FULL_SLOT)
-					printf("Room is full\n");
-				if(msg[2]=='0' + WRONG_RPASS)
-					printf("Wrong password\n");
-				if(msg[2]=='0' + ROOM_NEXIST)
-					printf("Room does not exist\n");
-				system("clear");
+				else
+				{
+					if(msg[2]=='0' + FULL_SLOT)
+						printf("Room is full\n");
+					if(msg[2]=='0' + WRONG_RPASS)
+						printf("Wrong password\n");
+					if(msg[2]=='0' + ROOM_NEXIST)
+						printf("Room does not exist\n");
+					system("clear");
+				}
+				
 				break;
 			}
 			case 3:
+			{
+				strcpy(msg,getScoreMessage(nickname));
+				send(sockfd,msg,strlen(msg),0);
+				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+				plus = getScore(msg);
+				printf("Your score is %d\n",plus);
+				break;
+			}
+			case 4:
 			{
 				printf("Goodbye %s\n",nickname);
 				isLoged_in = 0;

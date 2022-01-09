@@ -18,7 +18,6 @@ char *makeSignInMessage()
 {
 	char *str1 = (char*)calloc(30,sizeof(char));
 	char *str2 = (char*)calloc(20,sizeof(char));
-	char c;
 	printf("Username: ");
 	gets(str1);
 	while(checkString(str1)!=1)
@@ -278,5 +277,42 @@ char *makeEndMessage(ENDGAME_TYPE type)
 	str[1] = ' ';
 	str[2] = '0' + type;
 	str[3] = '\0';
+	return str;
+}
+char *getScoreMessage(char *nickname)
+{
+	int i = 2;
+	char *str = (char*)calloc(5,sizeof(char));
+	str[0] = '0' + GETSCORE;
+	str[1] = ' ';
+	while(i-2 < strlen(nickname))
+	{
+		str[i] = nickname[i-2];
+		i++;
+	}
+	str[i] = '\0';
+	return str;
+}
+char *makePlusScoreMessage(char *nickname,int score)
+{
+	int i = 2,j;
+	char *str = (char*)calloc(5,sizeof(char));
+	char *temp = (char*)calloc(4,sizeof(char));
+	sprintf(temp,"%d",score);
+	str[0] = '0' + PLUS;
+	str[1] = ' ';
+	while(i-2 < strlen(nickname))
+	{
+		str[i] = nickname[i-2];
+		i++;
+	}
+	str[i++]= ' ';
+	j = i;
+	while(i - j < strlen(temp))
+	{
+		str[i] = temp[i - j];
+		i++;
+	}
+	str[i] = '\0';
 	return str;
 }

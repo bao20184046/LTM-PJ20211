@@ -21,6 +21,17 @@ User *getUserByUserName(User *head, char* username)
 	}
 	return NULL;
 }
+User *getUserByNickName(User *head, char* nickname)
+{
+	User *acc = head;
+	while(acc != NULL)
+	{
+		if(strcmp(acc->nickname,nickname) == 0)
+			return acc;
+		acc= acc->next;
+	}
+	return NULL;
+}
 User *newUser(char* username, char* password, char* nickname, int score)
 {
 	User *acc = (User *)calloc(1,sizeof(User));

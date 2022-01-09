@@ -15,7 +15,9 @@ typedef enum{
 	GETLIST,
 	JOINROOM,
 	RAISE,
-	ENDGAME
+	ENDGAME,
+	PLUS,
+	GETSCORE
 }MSG_TYPE;
 
 typedef enum{
@@ -26,7 +28,8 @@ typedef enum{
 	JOI_RES,
 	NOT_RES,
 	BET_RES,
-	END_RES
+	END_RES,
+	SCORE_RES
 }RES_TYPE;
 
 typedef enum{
@@ -55,4 +58,6 @@ char *makeJoinRoomMessage(char *nickname);
 char *makeBetMessage(int newbet);
 char *makeNewRoundBetMessage(int newbet);
 char *makeEndMessage(ENDGAME_TYPE type);
+char *getScoreMessage(char *nickname);
+char *makePlusScoreMessage(char *nickname, int score);
 #endif
