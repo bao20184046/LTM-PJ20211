@@ -316,3 +316,17 @@ char *makePlusScoreMessage(char *nickname,int score)
 	str[i] = '\0';
 	return str;
 }
+char *makeLogOutMessage(char *nickname)
+{
+	char *str = (char*)calloc(25,sizeof(char));
+	str[0] = '0' + LOGOUT;
+	str[1] = ' ';
+	int i =2;
+	while(i-2 < strlen(nickname))
+	{
+		str[i] = nickname[i-2];
+		i++;
+	}
+	str[i] = '\0';
+	return str;
+}

@@ -344,7 +344,6 @@ int firstplay(char *opponent,int sockfd)
 		drawTable(Round);
 		drawHand();
 		highbet = bet[0] >= bet[1] ? bet[0] : bet[1];
-		memset(msg,0,sizeof(msg));
 		printf("Your bet: %d-----%s's bet: %d\n",bet[0],opponent,bet[1] );
 		printf("Your chip is: %d\n",chip);
 		printf("Enter your new bet(enter -1 to fold):  ");
@@ -625,7 +624,6 @@ int secondplay(char *opponent,int sockfd)
 			}
 		}
 		highbet = bet[0] >= bet[1] ? bet[0] : bet[1];
-		memset(msg,0,sizeof(msg));
 		printf("Your bet: %d-----%s's bet: %d\n",bet[0],opponent,bet[1]);
 		printf("Your chip is: %d\n",chip);
 		printf("Enter your new bet(enter -1 to fold):  ");
@@ -688,156 +686,161 @@ int main()
 	//Link to server
 	int res = connect(sockfd,(struct sockaddr*)&saddr,sizeof(saddr));
 	assert(res != -1);
-	while(isLoged_in == 0)
+	while(1)
 	{
-		SignIU();
-		scanf("%d",&choice);
-		while(choice<1||choice>3)
+		while(isLoged_in == 0)
 		{
-			printf("Invalid selection. Re-enter:  ");
+			SignIU();
 			scanf("%d",&choice);
-		}
-		getchar();
-		switch(choice)
-		{
-			case 1:
+			while(choice<1||choice>3)
 			{
-				strcpy(msg,makeSignInMessage());
-				send(sockfd,msg,strlen(msg),0);
-				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
-				msg[rcvsize] = '\0';
-				if(msg[2] == '0' + SUCCESS_SIGNIN)
-				{
-					strcpy(nickname,getNickName(msg));
-					isLoged_in = 1;
-				}
-				else if(msg[2] == '0' + NOT_EXIST)
-				{
-					printf("Account does not exist\n");
-				}
-				else if(msg[2] == '0' + WRONG_PASS)
-				{
-					printf("Wrong password\n");
-				}
-				else if(msg[2] == '0' + LOGED_IN)
-				{
-					printf("This account is logged in somewhere else\n");
-				}
-				break;
+				printf("Invalid selection. Re-enter:  ");
+				scanf("%d",&choice);
 			}
-			case 2:
+			getchar();
+			switch(choice)
 			{
-				strcpy(msg,makeSignUpMessage());
-				send(sockfd,msg,strlen(msg),0);
-				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
-				msg[rcvsize] = '\0';
-				if(msg[2] == '0' + SUCCESS_SIGNUP)
+				case 1:
 				{
-					strcpy(nickname,getNickName(msg));
-					isLoged_in = 1;
-				}
-				else if(msg[2] == '0' + EXISTED)
-				{
-					printf("Already have this account\n");
-				}
-				break;
-			}
-			case 3:
-			{
-				return 0;
-			}
-		}
-	}
-	system("clear");
-	printf("Login successfully. Welcome %s\n",nickname );
-	while(isLoged_in == 1)
-	{
-		menu();
-		scanf("%d",&choice);
-		while(choice<1||choice>4)
-		{
-			printf("Invalid selection. Re-enter:  ");
-			scanf("%d",&choice);
-		}
-		switch(choice)
-		{
-			case 1:
-			{
-				strcpy(msg,makeCreateRoomMessage(nickname));
-				send(sockfd,msg,strlen(msg),0);
-				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
-				msg[rcvsize] = '\0';
-				showIDCreatedRoom(msg);
-				printf("Please wait for another player to enter the room.\n");
-				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
-				configOpponent(msg,opponent);
-				setPlay();
-				setHandCard(msg);
-				plus = firstplay(opponent,sockfd);
-				printf("Please wait 8 seconds to return to the main screen\n");	
-				sleep(8);
-				system("clear");
-				printf("You get %d points added to your account\n",plus);
-				strcpy(msg,makePlusScoreMessage(nickname,plus));
-				send(sockfd,msg,strlen(msg),0);
-				break;
-			}
-			case 2:
-			{
-				strcpy(msg,getAvailableRoomMessage());
-				send(sockfd,msg,strlen(msg),0);
-				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
-				msg[rcvsize] = '\0';
-				showListRoom(msg);
-				strcpy(msg,makeJoinRoomMessage(nickname));
-				if(strlen(msg)==0)
+					strcpy(msg,makeSignInMessage());
+					send(sockfd,msg,strlen(msg),0);
+					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+					msg[rcvsize] = '\0';
+					if(msg[2] == '0' + SUCCESS_SIGNIN)
+					{
+						strcpy(nickname,getNickName(msg));
+						isLoged_in = 1;
+					}
+					else if(msg[2] == '0' + NOT_EXIST)
+					{
+						printf("Account does not exist\n");
+					}
+					else if(msg[2] == '0' + WRONG_PASS)
+					{
+						printf("Wrong password\n");
+					}
+					else if(msg[2] == '0' + LOGED_IN)
+					{
+						printf("This account is logged in somewhere else\n");
+					}
 					break;
-				send(sockfd,msg,strlen(msg),0);
-				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
-				msg[rcvsize] = '\0';
-				if(msg[2]=='0' + JOIN_SUCCESS)
+				}
+				case 2:
 				{
-					printf("Successfully join.\n");
-					configOpponent2(msg,opponent);
+					strcpy(msg,makeSignUpMessage());
+					send(sockfd,msg,strlen(msg),0);
+					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+					msg[rcvsize] = '\0';
+					if(msg[2] == '0' + SUCCESS_SIGNUP)
+					{
+						strcpy(nickname,getNickName(msg));
+						isLoged_in = 1;
+					}
+					else if(msg[2] == '0' + EXISTED)
+					{
+						printf("Already have this account\n");
+					}
+				break;
+				}
+				case 3:
+				{
+					return 0;
+				}
+			}
+		}
+		system("clear");
+		printf("Login successfully. Welcome %s\n",nickname );
+		while(isLoged_in == 1)
+		{
+			menu();
+			scanf("%d",&choice);
+			while(choice<1||choice>4)
+			{
+				printf("Invalid selection. Re-enter:  ");
+				scanf("%d",&choice);
+			}
+			switch(choice)
+			{
+				case 1:
+				{
+					strcpy(msg,makeCreateRoomMessage(nickname));
+					send(sockfd,msg,strlen(msg),0);
+					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+					msg[rcvsize] = '\0';
+					showIDCreatedRoom(msg);
+					printf("Please wait for another player to enter the room.\n");
+					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+					configOpponent(msg,opponent);
 					setPlay();
 					setHandCard(msg);
-					plus = secondplay(opponent,sockfd);
-					printf("Please wait 12 seconds to return to the main screen\n");	
-					sleep(12);
+					plus = firstplay(opponent,sockfd);
+					printf("Please wait 8 seconds to return to the main screen\n");	
+					sleep(8);
 					system("clear");
 					printf("You get %d points added to your account\n",plus);
 					strcpy(msg,makePlusScoreMessage(nickname,plus));
 					send(sockfd,msg,strlen(msg),0);
+					break;
 				}
-				else
+				case 2:
 				{
-					if(msg[2]=='0' + FULL_SLOT)
-						printf("Room is full\n");
-					if(msg[2]=='0' + WRONG_RPASS)
-						printf("Wrong password\n");
-					if(msg[2]=='0' + ROOM_NEXIST)
-						printf("Room does not exist\n");
-					system("clear");
+					strcpy(msg,getAvailableRoomMessage());
+					send(sockfd,msg,strlen(msg),0);
+					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+					msg[rcvsize] = '\0';
+					showListRoom(msg);
+					strcpy(msg,makeJoinRoomMessage(nickname));
+					if(strlen(msg)==0)
+						break;
+					send(sockfd,msg,strlen(msg),0);
+					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+					msg[rcvsize] = '\0';
+					if(msg[2]=='0' + JOIN_SUCCESS)
+					{
+						printf("Successfully join.\n");
+						configOpponent2(msg,opponent);
+						setPlay();
+						setHandCard(msg);
+						plus = secondplay(opponent,sockfd);
+						printf("Please wait 12 seconds to return to the main screen\n");	
+						sleep(12);
+						system("clear");
+						printf("You get %d points added to your account\n",plus);
+						strcpy(msg,makePlusScoreMessage(nickname,plus));
+						send(sockfd,msg,strlen(msg),0);
+					}
+					else
+					{
+						if(msg[2]=='0' + FULL_SLOT)
+							printf("Room is full\n");
+						if(msg[2]=='0' + WRONG_RPASS)
+							printf("Wrong password\n");
+						if(msg[2]=='0' + ROOM_NEXIST)
+							printf("Room does not exist\n");
+						system("clear");
+					}				
+					break;
 				}
-				
-				break;
-			}
-			case 3:
-			{
-				strcpy(msg,getScoreMessage(nickname));
-				send(sockfd,msg,strlen(msg),0);
-				rcvsize = recv(sockfd,msg,MSG_SIZE,0);
-				plus = getScore(msg);
-				printf("Your score is %d\n",plus);
-				break;
-			}
-			case 4:
-			{
-				printf("Goodbye %s\n",nickname);
-				isLoged_in = 0;
-				break;
+				case 3:
+				{
+					strcpy(msg,getScoreMessage(nickname));
+					send(sockfd,msg,strlen(msg),0);
+					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+					plus = getScore(msg);
+					printf("Your score is %d\n",plus);
+					break;
+				}
+				case 4:
+				{
+					printf("Goodbye %s\n",nickname);
+					strcpy(msg,makeLogOutMessage(nickname));
+					printf("2\n");
+					send(sockfd,msg,strlen(msg),0);
+					isLoged_in = 0;
+					break;
+				}
 			}
 		}
-	}
+	}	
 	close(sockfd);
 }

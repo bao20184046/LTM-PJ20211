@@ -17,7 +17,8 @@ typedef enum{
 	RAISE,
 	ENDGAME,
 	PLUS,
-	GETSCORE
+	GETSCORE,
+	LOGOUT
 }MSG_TYPE;
 
 typedef enum{
@@ -60,4 +61,5 @@ char *makeNewRoundBetMessage(int newbet);
 char *makeEndMessage(ENDGAME_TYPE type);
 char *getScoreMessage(char *nickname);
 char *makePlusScoreMessage(char *nickname, int score);
+char *makeLogOutMessage(char *nickname);
 #endif
