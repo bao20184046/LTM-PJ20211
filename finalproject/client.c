@@ -802,8 +802,8 @@ int main()
 						setPlay();
 						setHandCard(msg);
 						plus = secondplay(opponent,sockfd);
-						printf("Please wait 12 seconds to return to the main screen\n");	
-						sleep(12);
+						printf("Please wait 8 seconds to return to the main screen\n");	
+						sleep(10);
 						system("clear");
 						printf("You get %d points added to your account\n",plus);
 						strcpy(msg,makePlusScoreMessage(nickname,plus));

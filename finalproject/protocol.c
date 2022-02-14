@@ -13,6 +13,7 @@ int checkString(char* string)
 		return -1;
 	return 1;
 }
+
 //LOGIN username password
 char *makeSignInMessage()
 {

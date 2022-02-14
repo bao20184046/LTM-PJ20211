@@ -607,6 +607,7 @@ int main()
 							close(fds[i]);
 							fds[i]=-1;
 							printf("one client over\n");
+							ruler = getOpponentIndex(i);
 						}
 						else
 						{
