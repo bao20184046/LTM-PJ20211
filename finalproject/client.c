@@ -162,7 +162,7 @@ char* statusRoom(int status)
 {
 	if(status == 0)
 		return "Public";
-	return "Private"
+	return "Private";
 }
 void showListRoom(char *msg)
 {
@@ -205,6 +205,15 @@ void showIDCreatedRoom(char *msg)
 	}
 	printf("\n");
 }
+void countdown()
+{
+	printf("The game starts in 3 second\n");
+	sleep(1);
+	printf("The game starts in 2 second\n");
+	sleep(1);
+	printf("The game starts in 1 second\n");
+	sleep(1);
+}
 void configOpponent(char *msg,char *opponent)
 {
 	int i = 0;
@@ -214,6 +223,8 @@ void configOpponent(char *msg,char *opponent)
 		i++;
 	}
 	opponent[i] = '\0';
+	printf("Player %s has entered your room!!!\n",opponent);
+	countdown();
 }
 void configOpponent2(char *msg,char *opponent)
 {
@@ -234,6 +245,8 @@ void configOpponent2(char *msg,char *opponent)
 		i++;
 	}
 	opponent[i - j] = '\0';
+	printf("you have entered player %s's room!!!\n",opponent);
+	countdown();
 }
 int getScore(char *msg)
 {
@@ -254,7 +267,6 @@ int* processOpponentAction(char* msg)
 	int *result = (int*)calloc(4,sizeof(int));
 	if(msg[0] == '0' + END_RES)
 	{
-		printf("%s\n", msg);
 		result[0] = ENDGAME;
 		if(msg[2] == '-')
 		{
@@ -696,7 +708,6 @@ int main()
 	{
 		while(isLoged_in == 0)
 		{
-			system("clear");
 			SignIU();
 			scanf("%d",&choice);
 			while(choice<1||choice>3)
@@ -705,6 +716,7 @@ int main()
 				scanf("%d",&choice);
 			}
 			getchar();
+			system("clear");
 			switch(choice)
 			{
 				case 1:
@@ -713,11 +725,12 @@ int main()
 					send(sockfd,msg,strlen(msg),0);
 					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
 					msg[rcvsize] = '\0';
+					system("clear");
 					if(msg[2] == '0' + SUCCESS_SIGNIN)
 					{
 						strcpy(nickname,getNickName(msg));
 						isLoged_in = 1;
-					}
+					}					
 					else if(msg[2] == '0' + NOT_EXIST)
 					{
 						printf("Account does not exist\n");
@@ -738,6 +751,7 @@ int main()
 					send(sockfd,msg,strlen(msg),0);
 					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
 					msg[rcvsize] = '\0';
+					system("clear");
 					if(msg[2] == '0' + SUCCESS_SIGNUP)
 					{
 						strcpy(nickname,getNickName(msg));
@@ -745,9 +759,10 @@ int main()
 					}
 					else if(msg[2] == '0' + EXISTED)
 					{
+						
 						printf("Already have this account\n");
 					}
-				break;
+					break;
 				}
 				case 3:
 				{
@@ -766,10 +781,12 @@ int main()
 				printf("Invalid selection. Re-enter:  ");
 				scanf("%d",&choice);
 			}
+			system("clear");
 			switch(choice)
 			{
 				case 1:
 				{
+					
 					strcpy(msg,makeCreateRoomMessage(nickname));
 					send(sockfd,msg,strlen(msg),0);
 					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
@@ -777,6 +794,7 @@ int main()
 					showIDCreatedRoom(msg);
 					printf("Please wait for another player to enter the room.\n");
 					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
+					system("clear");
 					configOpponent(msg,opponent);
 					setPlay();
 					setHandCard(msg);
@@ -804,16 +822,17 @@ int main()
 					msg[rcvsize] = '\0';
 					if(msg[2]=='0' + JOIN_SUCCESS)
 					{
-						printf("Successfully join.\n");
+						system("clear");
 						configOpponent2(msg,opponent);
 						setPlay();
 						setHandCard(msg);
 						plus = secondplay(opponent,sockfd);
 						printf("Please wait few seconds to return to the main screen\n");	
-						sleep(9);
+						sleep(8);
 						system("clear");
 						printf("You get %d points added to your account\n",plus);
 						strcpy(msg,makePlusScoreMessage(nickname,plus));
+						sleep(1);
 						send(sockfd,msg,strlen(msg),0);
 					}
 					else
@@ -846,6 +865,7 @@ int main()
 					isLoged_in = 0;
 					break;
 				}
+				system("clear");
 			}
 		}
 	}	

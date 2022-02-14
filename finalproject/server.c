@@ -220,28 +220,8 @@ int processEnd(char *msg,int id)
 {
 	int type = msg[2] - '0';
 	if(type == FOLD)
-		return -1;
-	Room *r = getRoombyID(headRoom,id);
-	Card card1[7];
-	Card card2[7];
-	for(int i = 0; i < 7; i++)
-	{
-		card1[i] = newcard(r->deck[i]);
-	}
-	for(int i = 2; i< 7; i++)
-	{
-		card2[i] = newcard(r->deck[i]);
-	}
-	card2[0] = newcard(r->deck[7]);
-	card2[1] = newcard(r->deck[8]);
-	r->player[0].hand = calculate(card1);
-	r->player[1].hand = calculate(card2);
-	if(handCompare(r->player[0].hand,r->player[0].hand)>0)
-	{
-		return 1;
-	}
-	else if(handCompare(r->player[0].hand,r->player[0].hand)<0) return 2;
-	else return 0;
+		return 0;
+	return 1;
 }
 void processLogOut(char *msg)
 {
@@ -268,7 +248,6 @@ int processCreateRoom(char *msg)
 		i++;
 	}
 	nickname[i-4] = '\0';
-	Player p = newPlayer(nickname,100);
 	if(status == 1)
 	{
 		i++;
@@ -279,11 +258,11 @@ int processCreateRoom(char *msg)
 			i++;
 		}
 		password[i-j] = '\0';
-		id = pushRoom(&headRoom,1,password,p);
+		id = pushRoom(&headRoom,1,password,nickname);
 		return id;
 	}
 	strcpy(password,"\0");
-	id = pushRoom(&headRoom,0,password,p);
+	id = pushRoom(&headRoom,0,password,nickname);
 	return id;
 }
 void processPlusScore(char *msg)
@@ -363,7 +342,6 @@ int processJoinRoom(char *msg)
 	{
 		return -1;
 	}
-	Player p = newPlayer(nickname,100);
 	if(r->status==1)
 	{
 		i++;
@@ -376,7 +354,7 @@ int processJoinRoom(char *msg)
 		password[i-j] = '\0';
 		if(strcmp(r->password,password)==0)
 		{
-			joinRoom(r,p);
+			joinRoom(r,nickname);
 			setDeckToRoom(r);
 			return id;
 		}
@@ -385,7 +363,7 @@ int processJoinRoom(char *msg)
 			return -2;
 		}
 	}
-	joinRoom(r,p);
+	joinRoom(r,nickname);
 	setDeckToRoom(r);
 	return id;
 }
@@ -397,9 +375,9 @@ char *noticeRes(int id)
 	Room *r = getRoombyID(headRoom,id);
 	str[0] = '0' + NOT_RES;
 	str[1] = ' ';
-	while(i-2 < strlen(r->player[1].nickname))
+	while(i-2 < strlen(r->player2))
 	{
-		str[i] = r->player[1].nickname[i-2];
+		str[i] = r->player2[i-2];
 		i++;
 	}
 	str[i++] = ' ';
@@ -445,15 +423,17 @@ char *joinRoomRes(VALUE_RES res,int id)
 	}
 	str[i-1] = ' ';
 	j = i;
-	while(i - j < strlen(r->player[0].nickname))
+	while(i - j < strlen(r->player1))
 	{
-		str[i] = r->player[0].nickname[i-j];
+		str[i] = r->player1[i-j];
 		i++;
 	}
 	str[i] = '\0';
 	return str;
 }
-char *makeEndRes(int winner,int id, int mine)
+//if fold :END_RES -1
+//else :END_RES 0 card1 card2
+char *makeEndRes(int isFold,int id, int mine)
 {
 	char *str = (char*)calloc(20,sizeof(char));
 	char *temp = (char*)calloc(3,sizeof(char));
@@ -461,7 +441,7 @@ char *makeEndRes(int winner,int id, int mine)
 	int card1,card2;
 	str[0] = '0' + END_RES;
 	str[1] = ' ';
-	if(winner == -1)
+	if(isFold == 0)
 	{
 		str[2] = '-';
 		str[3] = '1';
@@ -469,7 +449,7 @@ char *makeEndRes(int winner,int id, int mine)
 		return str;
 	}
 	Room *r = getRoombyID(headRoom,id);
-	str[2] = winner + '0';
+	str[2] = '0';
 	str[3] = ' ';
 	if(mine == 1)
 	{
@@ -586,6 +566,7 @@ int main()
 						}
 					
 						fds_add(fds,c);
+					}
 					else   
 					{
 						char buff[128]={0};
@@ -671,7 +652,7 @@ int main()
 									int idd = getIdbyIndex(i);
 									int i2 = Link[idd].i1 == i ? Link[idd].i2 : Link[idd].i1;
 									ruler = processEnd(buff,idd);
-									if(ruler == -1)
+									if(ruler == 0)
 									{
 										send(fds[i2],makeEndRes(ruler,idd,0),20,0);
 									}

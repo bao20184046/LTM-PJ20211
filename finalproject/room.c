@@ -7,21 +7,15 @@ Room *makeListRoom()
 	memset(new,0,sizeof(struct box));
 	return new;
 }
-Player newPlayer(char* nickname,int chip)
-{
-	Player new;
-	strcpy(new.nickname,nickname);
-	return new;
-}
 
-void joinRoom(Room *room, Player newPlayer)
+
+void joinRoom(Room *room, char* joiner)
 {
 	if(room->canPlay==1)
 	{
-		printf("Full slot\n");
 		return;
 	}
-	room->player[1] = newPlayer;
+	strcpy(room->player2,joiner);
 	room->canPlay = 1;
 }
 
@@ -48,21 +42,21 @@ void setDeckToRoom(Room *room)
 
 
 
-Room *newRoom(int status, char* password, Player creator_room)
+Room *newRoom(int status, char* password, char* creator)
 {
 	Room *new = (Room*)malloc(sizeof(Room));
 	memset(new,0,sizeof(struct box));
 	new->status = status;
 	new->canPlay = 0;
 	strcpy(new->password,password);
-	new->player[0] = creator_room;
+	strcpy(new->player1,creator);
 	new->next = NULL;
 	return new;
 }
-int pushRoom(Room **headRoom, int status, char* password, Player creator_room)
+int pushRoom(Room **headRoom, int status, char* password, char* creator)
 {
 	int id = 0;
-	Room *new = newRoom(status,password,creator_room);
+	Room *new = newRoom(status,password,creator);
 	if((*headRoom)->id == 0)
 	{
 		*headRoom = new;
