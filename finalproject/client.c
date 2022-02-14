@@ -158,6 +158,12 @@ char *getNickName(char *msg)
 	nickname[i] = '\0';
 	return nickname;
 }
+char* statusRoom(int status)
+{
+	if(status == 0)
+		return "Public";
+	return "Private"
+}
 void showListRoom(char *msg)
 {
 	int i = 0,j,lenght = strlen(msg);
@@ -182,8 +188,8 @@ void showListRoom(char *msg)
 		j++;
 		status = temp[j] - '0';
 		if(id<10)
-			printf(" %d\t%d\n",id,status);
-		else printf("%d\t%d\n",id,status);
+			printf(" %d\t%s\n",id,statusRoom(status));
+		else printf("%d\t%s\n",id,statusRoom(status));
 		i++;
 	}
 	free(temp);
@@ -690,6 +696,7 @@ int main()
 	{
 		while(isLoged_in == 0)
 		{
+			system("clear");
 			SignIU();
 			scanf("%d",&choice);
 			while(choice<1||choice>3)
@@ -774,7 +781,7 @@ int main()
 					setPlay();
 					setHandCard(msg);
 					plus = firstplay(opponent,sockfd);
-					printf("Please wait 8 seconds to return to the main screen\n");	
+					printf("Please wait few seconds to return to the main screen\n");	
 					sleep(8);
 					system("clear");
 					printf("You get %d points added to your account\n",plus);
@@ -802,8 +809,8 @@ int main()
 						setPlay();
 						setHandCard(msg);
 						plus = secondplay(opponent,sockfd);
-						printf("Please wait 8 seconds to return to the main screen\n");	
-						sleep(10);
+						printf("Please wait few seconds to return to the main screen\n");	
+						sleep(9);
 						system("clear");
 						printf("You get %d points added to your account\n",plus);
 						strcpy(msg,makePlusScoreMessage(nickname,plus));
