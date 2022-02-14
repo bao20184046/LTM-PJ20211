@@ -32,5 +32,5 @@ Room *getRoombyID(Room *headRoom, int id);
 int pushRoom(Room **headRoom, int status, char* password, Player creator_room);
 int* newround(Room *headRoom,int bet[],Card playercard[][7]);
 void setDeckToRoom(Room *room);
-void removeRoom(Room *headRoom,int id);
+void removeRoom(Room **headRoom,int id);
 #endif

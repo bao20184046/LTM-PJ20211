@@ -288,7 +288,6 @@ int processCreateRoom(char *msg)
 }
 void processPlusScore(char *msg)
 {
-	printf("1\n");
 	int i = 2,plus =0;
 	char *nickname = (char*)calloc(20,sizeof(char));
 	while(msg[i]!=' ')
@@ -297,7 +296,6 @@ void processPlusScore(char *msg)
 		i++;
 	}
 	nickname[i-2] = '\0';
-	printf("%s\n",nickname );
 	User *user = getUserByNickName(headUser,nickname);
 	i++;
 	while(i < strlen(msg))
@@ -306,7 +304,6 @@ void processPlusScore(char *msg)
 		plus+= msg[i] - '0';
 		i++;
 	}
-	printf("%d\n",plus );
 	user->score+=plus;
 }
 int processGetScore(char *msg)
@@ -517,13 +514,11 @@ int main()
 
 	int res=bind(sockfd,(struct sockaddr*)&saddr,sizeof(saddr));
 	assert(res!=-1);
-	
-	//Create listening queue
+
 	listen(sockfd,5);
-   //Define fdset collection
+
     fd_set fdset;
-	
-	//Define fds array
+
     int fds[MAXFD];
     int i=0;
     for(;i<MAXFD;++i)
@@ -531,17 +526,15 @@ int main()
 	  	fds[i]=-1;
     }
 	LoadUser();
-	//Add a file descriptor to the fds array
     fds_add(fds,sockfd);
 	while(1)
     {
-		FD_ZERO(&fdset);//Clear the fdset array to 0
+		FD_ZERO(&fdset);
 
 		int maxfd=-1;
 
 		int i=0;
 
-		//For loop finds the maximum subscript for the ready event in the fds array
 		for(;i<MAXFD;i++)
 		{
 			if(fds[i]==-1)
@@ -557,48 +550,43 @@ int main()
 			}
 		}
 
-		struct timeval tv={120,0};	//Set timeout of 2 minute
+		struct timeval tv={120,0};	
 
-		int n=select(maxfd+1,&fdset,NULL,NULL,&tv);//Selectect system call, where we only focus on read events
-		if(n==-1)	//fail
+		int n=select(maxfd+1,&fdset,NULL,NULL,&tv);
+		if(n==-1)	
 		{
 			perror("select error");
 		}
-		else if(n==0)//Timeout, meaning no file descriptor returned
+		else if(n==0)
 		{
 			printf("time out\n");
 		}
-		else//Ready event generation
+		else
 		{
-		//Because we only know the number of ready events by the return value of select, we don't know which events are ready.
-		//Therefore, each file descriptor needs to be traversed for judgment
+
 			for(i=0;i<MAXFD;++i)
 			{
-				if(fds[i]==-1)	//If fds[i]==-1, the event is not ready
+				if(fds[i]==-1)	
 				{
 					continue;
 				}
-				if(FD_ISSET(fds[i],&fdset))	//Determine if the event corresponding to the file descriptor is ready
+				if(FD_ISSET(fds[i],&fdset))	
 				{
 			   
-				//There are two kinds of cases for judging file descriptors
-			   
-					if(fds[i]==sockfd)	//A file descriptor is a socket, meaning accept if a new client requests a connection
+					if(fds[i]==sockfd)	
 					{
-						//accept
 						struct sockaddr_in caddr;
-						int len=sizeof(caddr);
+						socklen_t len=sizeof(caddr);
 
-						int c=accept(sockfd,(struct sockaddr *)&caddr,&len);	//Accept new client connections
+						int c=accept(sockfd,(struct sockaddr *)&caddr,&len);	
 						printf("Connect to %s\n",inet_ntoa(caddr.sin_addr));
 						if(c<0)
 						{
 							continue;
 						}
 					
-						fds_add(fds,c);//Add the connection socket to the array where the file descriptor is stored
-					}
-					else   //Receive data recv when an existing client sends data
+						fds_add(fds,c);
+					else   
 					{
 						char buff[128]={0};
 						int res=recv(fds[i],buff,127,0);
@@ -702,6 +690,7 @@ int main()
 										Link[idd].i1 = 0;
 										Link[idd].i2 = 0;
 									} 
+									removeRoom(&headRoom,idd);
 									break;
 								}
 								case PLUS:
