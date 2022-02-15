@@ -49,7 +49,8 @@ typedef enum{
 typedef enum{
 	FOLD,//dau hang
 	ALLIN,//2 nguoi all in
-	COMMON//cuoc hoan tat
+	COMMON,//cuoc hoan tat
+	OUT
 }ENDGAME_TYPE;
 char *makeSignInMessage();
 char *makeSignUpMessage();

@@ -221,6 +221,8 @@ int processEnd(char *msg,int id)
 	int type = msg[2] - '0';
 	if(type == FOLD)
 		return 0;
+	if(type == OUT)
+		return -1;
 	return 1;
 }
 void processLogOut(char *msg)
@@ -478,6 +480,7 @@ char *makeEndRes(int isFold,int id, int mine)
 	str[i] = '\0';
 	return str;
 }
+
 int main()
 {
 	memset(Link,0,sizeof(Link));
@@ -491,7 +494,7 @@ int main()
 	saddr.sin_family=AF_INET;
 	saddr.sin_port=htons(PORT);
 	saddr.sin_addr.s_addr=inet_addr("127.0.0.1");
-
+	char clientinfo[MAXFD][20];
 	int res=bind(sockfd,(struct sockaddr*)&saddr,sizeof(saddr));
 	assert(res!=-1);
 
@@ -575,13 +578,26 @@ int main()
 						{
 							close(fds[i]);
 							fds[i]=-1;
-							printf("one client over\n");
-							ruler = getOpponentIndex(i);
+							User *user;
+							user = getUserByNickName(headUser,clientinfo[i]);
+							user->isLogin = 0;
+							ruler = getIdbyIndex(i);
+							if(ruler!=0)
+							{
+								if(i == Link[ruler].i1)
+								{
+									ruler = Link[ruler].i2;
+								}
+								else
+								{
+									ruler = Link[ruler].i1;
+								}
+								send(fds[ruler],"OUT-GAME",10,0);
+							}
 						}
 						else
 						{
 							buff[res] = '\0';
-							if(buff[0] != 'N')
 							switch(buff[0]-'0')
 							{
 								case REGISTER:
@@ -594,6 +610,7 @@ int main()
 									else {
 										send(fds[i],signIURes(REG_RES,SUCCESS_SIGNUP,nickname),25,0);
 										updateUser();
+										strcpy(clientinfo[i],nickname);
 									}
 									break;
 								}
@@ -611,6 +628,7 @@ int main()
 										send(fds[i],signIURes(LOG_RES,LOGED_IN,nickname),25,0);
 									}else{
 										send(fds[i],signIURes(LOG_RES,SUCCESS_SIGNIN,nickname),25,0);
+										strcpy(clientinfo[i],nickname);
 									} 
 									break;
 								}
@@ -657,7 +675,7 @@ int main()
 									{
 										send(fds[i2],makeEndRes(ruler,idd,0),20,0);
 									}
-									else
+									else if(ruler == 1)
 									{
 										if(i2 == Link[idd].i2)
 										{
@@ -669,9 +687,10 @@ int main()
 											send(fds[i],makeEndRes(ruler,idd,2),20,0);
 											send(fds[i2],makeEndRes(ruler,idd,1),20,0);
 										}
-										Link[idd].i1 = 0;
-										Link[idd].i2 = 0;
-									} 
+										
+									}
+									Link[idd].i1 = 0;
+									Link[idd].i2 = 0; 
 									removeRoom(&headRoom,idd);
 									break;
 								}

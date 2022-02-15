@@ -479,6 +479,13 @@ int firstplay(char *opponent,int sockfd)
 		send(sockfd,msg,strlen(msg),0);
 		printf("Waiting for opponent to reply\n");
 		recv(sockfd,msg,MSG_SIZE,0);
+		if(strcmp(msg,"OUT-GAME")==0)
+		{
+			printf("Player %s lost connection. You win the game\n",opponent);
+			strcpy(msg,makeEndMessage(OUT));
+			send(sockfd,msg,strlen(msg),0);
+			return chip + bet[1];
+		}
 		recive = processOpponentAction(msg);
 		if(recive[0] == RAISE)
 		{
@@ -608,6 +615,13 @@ int secondplay(char *opponent,int sockfd)
 	{
 		printf("Waiting for opponent to reply\n");
 		recv(sockfd,msg,MSG_SIZE,0);
+		if(strcmp(msg,"OUT-GAME")==0)
+		{
+			printf("Player %s lost connection. You win the game\n",opponent);
+			strcpy(msg,makeEndMessage(OUT));
+			send(sockfd,msg,strlen(msg),0);
+			return chip + bet[1];
+		}
 		recive = processOpponentAction(msg);
 		system("clear");
 		drawTable(Round);
@@ -781,7 +795,6 @@ int main()
 	saddr.sin_port = htons(6666);
 	saddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-	//Link to server
 	int res = connect(sockfd,(struct sockaddr*)&saddr,sizeof(saddr));
 	assert(res != -1);
 	while(1)
