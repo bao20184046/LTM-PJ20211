@@ -42,6 +42,8 @@ char* convertValue(int value)
 		return "Q";
 	if(value== 13)
 		return "K";
+	if(value== 14)
+		return "A";
 }
 
 Card newcard(int input)

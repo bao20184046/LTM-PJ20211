@@ -581,6 +581,7 @@ int main()
 						else
 						{
 							buff[res] = '\0';
+							if(buff[0] != 'N')
 							switch(buff[0]-'0')
 							{
 								case REGISTER:

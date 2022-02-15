@@ -126,15 +126,21 @@ char *makeCreateRoomMessage(char* nickname)
 	char *str = (char*)calloc(50,sizeof(char));
 	int room_type,i = 4,j;
 	printf("CREATE ROOM:\n");
-	printf("0. Public room\n");
-	printf("1. Private room\n");
+	printf("1. Public room\n");
+	printf("2. Private room\n");
+	printf("3. Back\n");
 	printf("Please enter your choice: \n");
 	scanf("%d",&room_type);
-	while(room_type<0||room_type>1)
+	while(room_type<1||room_type>3)
 	{
 		printf("Invalid selection. Re-enter:  ");
 		scanf("%d",&room_type);
 	}
+	if(room_type==3)
+	{
+		return "";
+	}
+	room_type--;
 	str[0] = '0'+CREATEROOM;
 	str[1] = ' ';
 	str[2] = '0'+room_type;
@@ -179,7 +185,7 @@ char* makeJoinRoomMessage(char *nickname)
 	char *str = (char*)calloc(50,sizeof(char));
 	printf("JOIN ROOM\n");
 	printf("1. Join room by id\n");
-	printf("2. Exit\n");
+	printf("2. Back\n");
 	printf("Enter your choice:  ");
 	scanf("%d",&choice);
 	while(choice<1||choice>2)

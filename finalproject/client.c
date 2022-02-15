@@ -11,17 +11,22 @@
 #include "handcard.h"
 Card card[7];
 Card opponentcard[7];
+Card pre_card[7];
+Card pre_opponentcard[7];
 int bet[2];
 int Round;
 int chip;
+Handcard hand1;
+Handcard hand2;
 void menu()
 {
 	printf("***************************************\n");
 	printf("MENU:\n");
 	printf("1. Create room\n");
 	printf("2. Join room\n");
-	printf("3. See score\n");
-	printf("4. Log out\n");
+	printf("3. View score\n");
+	printf("4. View last battle result\n");
+	printf("5. Log out\n");
 	printf("***************************************\n");
 	printf("Enter your choice:  ");
 }
@@ -93,6 +98,10 @@ void setPlay()
 {
 	memset(card,0,sizeof(card));
 	memset(opponentcard,0,sizeof(opponentcard));
+	memset(pre_card,0,sizeof(card));
+	memset(pre_opponentcard,0,sizeof(opponentcard));
+	memset(&hand1,0,sizeof(hand1));
+	memset(&hand2,0,sizeof(hand2));
 	Round = ROUND;
 	bet[0] = BET;
 	bet[1] = BET;
@@ -112,22 +121,22 @@ void drawTable(int round)
 	if(round==2)
 	{
 		printf("------------------------------------------\n");
-		printf("|%s\t| |%s\t| |%s\t| | \t| | \t|\n",card[0].showvalue,card[1].showvalue,card[2].showvalue);
-		printf("|%s\t| |%s\t| |%s\t| | \t| | \t|\n",card[0].showtype,card[1].showtype,card[2].showtype);
+		printf("|%s\t| |%s\t| |%s\t| | \t| | \t|\n",pre_card[0].showvalue,pre_card[1].showvalue,pre_card[2].showvalue);
+		printf("|%s\t| |%s\t| |%s\t| | \t| | \t|\n",pre_card[0].showtype,pre_card[1].showtype,pre_card[2].showtype);
 		printf("------------------------------------------\n");
 	}
 	if(round==3)
 	{
 		printf("------------------------------------------\n");
-		printf("|%s\t| |%s\t| |%s\t| |%s\t| | \t|\n",card[0].showvalue,card[1].showvalue,card[2].showvalue,card[3].showvalue);
-		printf("|%s\t| |%s\t| |%s\t| |%s\t| | \t|\nn",card[0].showtype,card[1].showtype,card[2].showtype,card[3].showtype);
+		printf("|%s\t| |%s\t| |%s\t| |%s\t| | \t|\n",pre_card[0].showvalue,pre_card[1].showvalue,pre_card[2].showvalue,pre_card[3].showvalue);
+		printf("|%s\t| |%s\t| |%s\t| |%s\t| | \t|\nn",pre_card[0].showtype,pre_card[1].showtype,pre_card[2].showtype,pre_card[3].showtype);
 		printf("------------------------------------------\n");
 	}
 	if(round==4)
 	{
 		printf("------------------------------------------\n");
-		printf("|%s\t| |%s\t| |%s\t| |%s\t| |%s\t|\n",card[0].showvalue,card[1].showvalue,card[2].showvalue,card[3].showvalue,card[4].showvalue);
-		printf("|%s\t| |%s\t| |%s\t| |%s\t| |%s\t|\n",card[0].showtype,card[1].showtype,card[2].showtype,card[3].showtype,card[4].showtype);
+		printf("|%s\t| |%s\t| |%s\t| |%s\t| |%s\t|\n",pre_card[0].showvalue,pre_card[1].showvalue,pre_card[2].showvalue,pre_card[3].showvalue,pre_card[4].showvalue);
+		printf("|%s\t| |%s\t| |%s\t| |%s\t| |%s\t|\n",pre_card[0].showtype,pre_card[1].showtype,pre_card[2].showtype,pre_card[3].showtype,pre_card[4].showtype);
 		printf("------------------------------------------\n");
 	}
 	printf("****************************************\n");
@@ -135,16 +144,105 @@ void drawTable(int round)
 void drawHand()
 {
 	printf("------------------\n");
-	printf("|%s\t| |%s\t|\n",card[5].showvalue,card[6].showvalue);
-	printf("|%s\t| |%s\t|\n",card[5].showtype,card[6].showtype);
+	printf("|%s\t| |%s\t|\n",pre_card[5].showvalue,pre_card[6].showvalue);
+	printf("|%s\t| |%s\t|\n",pre_card[5].showtype,pre_card[6].showtype);
 	printf("------------------\n");
 }
 void drawOpponentHand()
 {
 	printf("------------------\n");
-	printf("|%s\t| |%s\t|\n",opponentcard[5].showvalue,opponentcard[6].showvalue);
-	printf("|%s\t| |%s\t|\n",opponentcard[5].showtype,opponentcard[6].showtype);
+	printf("|%s\t| |%s\t|\n",pre_opponentcard[5].showvalue,pre_opponentcard[6].showvalue);
+	printf("|%s\t| |%s\t|\n",pre_opponentcard[5].showtype,pre_opponentcard[6].showtype);
 	printf("------------------\n");
+}
+char* rank(int rank)
+{
+	if(rank == 10)
+		return "Royal Flush(Rank 10)";
+	if(rank == 9)
+		return "Straight Flush(Rank 9)";
+	if(rank == 8)
+		return "Four of a kind(Rank 8)";
+	if(rank == 7)
+		return "Fullhouse(Rank 7)";
+	if(rank == 6)
+		return "Flush(Rank 6)";
+	if(rank == 5)
+		return "Straight(Rank 5)";
+	if(rank == 4)
+		return "Three of a kind(Rank 4)";
+	if(rank == 3)
+		return "Two pair(Rank 3)";
+	if(rank == 2)
+		return "Pair(Rank 2)";
+	if(rank == 1)
+		return "High Card(Rank 1)";
+}
+void copyHand()
+{
+	for(int i = 0; i < 7; i++)
+	{
+		pre_card[i] = card[i];
+		pre_opponentcard[i] = opponentcard[i];
+	}
+}
+void ViewLastBattleResult()
+{
+	if(pre_card[0].value==0)
+	{
+		printf("When you open this application, you have not fought any battles.\n");
+		return;
+	}
+	printf("GAME RESULT:\n");
+	drawTable(4);
+	printf("Your hand:\n");
+	drawHand();
+	printf("Opponent's hand:\n");
+	drawOpponentHand();
+	printf("Information:\n");
+	printf("+ You have %s.\n",rank(hand1.rank));
+	if(hand1.high_value!=0)
+	{
+		printf("+ The most valuable card is %s.\n", convertValue(hand1.high_value));
+	}
+	if(hand1.second_value!=0)
+	{
+		printf("+ The second valuable card is %s.\n", convertValue(hand1.second_value));
+	}
+	if(hand1.third_value!=0)
+	{
+		printf("+ The third valuable card is %s.\n", convertValue(hand1.third_value));
+	}
+	if(hand1.fouth_value!=0)
+	{
+		printf("+ The fouth valuable card is %s.\n", convertValue(hand1.fouth_value));
+	}
+	if(hand1.high_value!=0)
+	{
+		printf("+ The 5th valuable card is %s.\n", convertValue(hand1.last_value));
+	}
+	printf("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+	printf("- Opponent have %s.\n",rank(hand2.rank));
+	if(hand1.high_value!=0)
+	{
+		printf("+ The most valuable card is %s.\n", convertValue(hand2.high_value));
+	}
+	if(hand1.second_value!=0)
+	{
+		printf("+ The second valuable card is %s.\n", convertValue(hand2.second_value));
+	}
+	if(hand1.third_value!=0)
+	{
+		printf("+ The third valuable card is %s.\n", convertValue(hand2.third_value));
+	}
+	if(hand1.fouth_value!=0)
+	{
+		printf("+ The fouth valuable card is %s.\n", convertValue(hand2.fouth_value));
+	}
+	if(hand1.high_value!=0)
+	{
+		printf("+ The 5th valuable card is %s.\n", convertValue(hand2.last_value));
+	}
 }
 char *getNickName(char *msg)
 {
@@ -205,13 +303,17 @@ void showIDCreatedRoom(char *msg)
 	}
 	printf("\n");
 }
-void countdown()
+void countdown(int option)
 {
-	printf("The game starts in 3 second\n");
+	char buff[30];
+	if(option==1)
+		strcpy(buff,"The game starts");
+	else strcpy(buff,"return to the main screen");
+	printf("%s in 3 second\n",buff);
 	sleep(1);
-	printf("The game starts in 2 second\n");
+	printf("%s in 2 second\n",buff);
 	sleep(1);
-	printf("The game starts in 1 second\n");
+	printf("%s in 1 second\n",buff);
 	sleep(1);
 }
 void configOpponent(char *msg,char *opponent)
@@ -224,7 +326,7 @@ void configOpponent(char *msg,char *opponent)
 	}
 	opponent[i] = '\0';
 	printf("Player %s has entered your room!!!\n",opponent);
-	countdown();
+	countdown(1);
 }
 void configOpponent2(char *msg,char *opponent)
 {
@@ -246,7 +348,7 @@ void configOpponent2(char *msg,char *opponent)
 	}
 	opponent[i - j] = '\0';
 	printf("you have entered player %s's room!!!\n",opponent);
-	countdown();
+	countdown(1);
 }
 int getScore(char *msg)
 {
@@ -319,6 +421,7 @@ int firstplay(char *opponent,int sockfd)
 	char *msg = (char*)calloc(MSG_SIZE,sizeof(char));
 	int result;
 	int newRound = 0;		
+	copyHand();
 	while(1)
 	{
 		if(count == 2)
@@ -334,14 +437,17 @@ int firstplay(char *opponent,int sockfd)
 				recive = processOpponentAction(msg);
 				opponentcard[5] = newcard(recive[2]);
 				opponentcard[6] = newcard(recive[3]);
+				copyHand();
 				system("clear");
 				printf("GAME RESULT:\n");
 				drawTable(4);
 				printf("Your hand:\n");
 				drawHand();
 				printf("%s's hand:\n",opponent);
-				drawOpponentHand();
-				result = handCompare(calculate(card),calculate(opponentcard));
+				drawOpponentHand();				
+				hand1 = calculate(card);
+				hand2 = calculate(opponentcard);
+				result = handCompare(hand1,hand2);
 				if(result>0)
 				{
 					printf("You win this game. Your score is %d\n",chip + bet[1]);
@@ -438,13 +544,16 @@ int firstplay(char *opponent,int sockfd)
 					opponentcard[5] = newcard(recive[2]);
 					opponentcard[6] = newcard(recive[3]);
 					system("clear");
+					copyHand();
 					printf("GAME RESULT:\n");
 					drawTable(4);
 					printf("Your hand:\n");
 					drawHand();
 					printf("%s's hand:\n",opponent);
-					drawOpponentHand();
-					result = handCompare(calculate(card),calculate(opponentcard));
+					drawOpponentHand();					
+					hand1 = calculate(card);
+					hand2 = calculate(opponentcard);
+					result = handCompare(hand1,hand2);
 					if(result>0)
 					{
 						printf("You win this game. Your score is %d\n",2*chip);
@@ -484,12 +593,15 @@ int firstplay(char *opponent,int sockfd)
 				opponentcard[5] = newcard(recive[2]);
 				opponentcard[6] = newcard(recive[3]);
 				printf("GAME RESULT:\n");
+				copyHand();
 				drawTable(4);
 				printf("Your hand:\n");
 				drawHand();
 				printf("%s's hand:\n",opponent);
-				drawOpponentHand();
-				result = handCompare(calculate(card),calculate(opponentcard));
+				drawOpponentHand();				
+				hand1 = calculate(card);
+				hand2 = calculate(opponentcard);
+				result = handCompare(hand1,hand2);
 				if(result>0)
 				{
 					if(newbet == -2)
@@ -526,7 +638,8 @@ int secondplay(char *opponent,int sockfd)
 	int *recive = (int*)calloc(4,sizeof(int));
 	char *msg = (char*)calloc(MSG_SIZE,sizeof(char));
 	int result;
-	system("clear");		
+	system("clear");
+	copyHand();		
 	while(1)
 	{
 		printf("Waiting for opponent to reply\n");
@@ -540,9 +653,6 @@ int secondplay(char *opponent,int sockfd)
 			if(recive[1] == -1)
 			{
 				printf(" Player %s have surrendered. You win this game.\n",opponent );
-				printf("Your score is %d\n",chip + bet[1]);
-				printf("Press something to exit:....");
-				gets(msg);
 				return chip + bet[1];
 			}
 			if(recive[1] == -2)
@@ -565,13 +675,16 @@ int secondplay(char *opponent,int sockfd)
 					opponentcard[5] = newcard(recive[2]);
 					opponentcard[6] = newcard(recive[3]);
 					system("clear");
+					copyHand();
 					printf("GAME RESULT:\n");
 					drawTable(4);
 					printf("Your hand:\n");
 					drawHand();
 					printf("%s's hand:\n",opponent);
-					drawOpponentHand();
-					result = handCompare(calculate(card),calculate(opponentcard));
+					drawOpponentHand();					
+					hand1 = calculate(card);
+					hand2 = calculate(opponentcard);
+					result = handCompare(hand1,hand2);
 					if(result>0)
 					{
 						printf("You win this game. Your score is %d\n",chip*2);
@@ -611,13 +724,16 @@ int secondplay(char *opponent,int sockfd)
 				opponentcard[5] = newcard(recive[2]);
 				opponentcard[6] = newcard(recive[3]);
 				system("clear");
+				copyHand();
 				printf("GAME RESULT:\n");
 				drawTable(4);
 				printf("Your hand:\n");
 				drawHand();
 				printf("%s's hand:\n",opponent);
-				drawOpponentHand();
-				result = handCompare(calculate(card),calculate(opponentcard));
+				drawOpponentHand();				
+				hand1 = calculate(card);
+				hand2 = calculate(opponentcard);
+				result = handCompare(hand1,hand2);
 				if(result>0)
 				{
 					if(newbet == -2)
@@ -771,12 +887,13 @@ int main()
 			}
 		}
 		system("clear");
+		setPlay();
 		printf("Login successfully. Welcome %s\n",nickname );
 		while(isLoged_in == 1)
 		{
 			menu();
 			scanf("%d",&choice);
-			while(choice<1||choice>4)
+			while(choice<1||choice>5)
 			{
 				printf("Invalid selection. Re-enter:  ");
 				scanf("%d",&choice);
@@ -788,6 +905,8 @@ int main()
 				{
 					
 					strcpy(msg,makeCreateRoomMessage(nickname));
+					if(strcmp(msg,"")==0)
+						break;
 					send(sockfd,msg,strlen(msg),0);
 					rcvsize = recv(sockfd,msg,MSG_SIZE,0);
 					msg[rcvsize] = '\0';
@@ -799,8 +918,7 @@ int main()
 					setPlay();
 					setHandCard(msg);
 					plus = firstplay(opponent,sockfd);
-					printf("Please wait few seconds to return to the main screen\n");	
-					sleep(8);
+					countdown(2);
 					system("clear");
 					printf("You get %d points added to your account\n",plus);
 					strcpy(msg,makePlusScoreMessage(nickname,plus));
@@ -827,8 +945,7 @@ int main()
 						setPlay();
 						setHandCard(msg);
 						plus = secondplay(opponent,sockfd);
-						printf("Please wait few seconds to return to the main screen\n");	
-						sleep(8);
+						countdown(2);
 						system("clear");
 						printf("You get %d points added to your account\n",plus);
 						strcpy(msg,makePlusScoreMessage(nickname,plus));
@@ -837,13 +954,14 @@ int main()
 					}
 					else
 					{
+						system("clear");
 						if(msg[2]=='0' + FULL_SLOT)
 							printf("Room is full\n");
 						if(msg[2]=='0' + WRONG_RPASS)
 							printf("Wrong password\n");
 						if(msg[2]=='0' + ROOM_NEXIST)
 							printf("Room does not exist\n");
-						system("clear");
+						
 					}				
 					break;
 				}
@@ -858,14 +976,18 @@ int main()
 				}
 				case 4:
 				{
+					ViewLastBattleResult();
+					break;
+				}
+				case 5:
+				{
+					system("clear");
 					printf("Goodbye %s\n",nickname);
 					strcpy(msg,makeLogOutMessage(nickname));
-					printf("2\n");
 					send(sockfd,msg,strlen(msg),0);
 					isLoged_in = 0;
 					break;
 				}
-				system("clear");
 			}
 		}
 	}	
