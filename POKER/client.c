@@ -155,28 +155,32 @@ void drawOpponentHand()
 	printf("|%s\t| |%s\t|\n",pre_opponentcard[5].showtype,pre_opponentcard[6].showtype);
 	printf("------------------\n");
 }
-char* rank(int rank)
+void analysis(Handcard hand, int option)
 {
-	if(rank == 10)
-		return "Royal Flush(Rank 10)";
-	if(rank == 9)
-		return "Straight Flush(Rank 9)";
-	if(rank == 8)
-		return "Four of a kind(Rank 8)";
-	if(rank == 7)
-		return "Fullhouse(Rank 7)";
-	if(rank == 6)
-		return "Flush(Rank 6)";
-	if(rank == 5)
-		return "Straight(Rank 5)";
-	if(rank == 4)
-		return "Three of a kind(Rank 4)";
-	if(rank == 3)
-		return "Two pair(Rank 3)";
-	if(rank == 2)
-		return "Pair(Rank 2)";
-	if(rank == 1)
-		return "High Card(Rank 1)";
+	char buff[10];
+	if(option == 1)
+		strcpy(buff,"You");
+	else strcpy(buff,"Opponent");
+	if(hand.rank == 10)
+		printf("%s have Royal Flush(Rank 10). %s have Straight from 10 to A of the same suit.\n",buff,buff);
+	if(hand.rank == 9)
+		printf("%s have Straight Flush(Rank 9). %s have Straight from %s to %s of the same suit.\n",buff,buff,convertValue(hand.high_value-4),convertValue(hand.high_value));
+	if(hand.rank == 8)
+		printf("%s have Four of a kind(Rank 8). %s have 4 cards of %s. The remaining highest value card is %s\n",buff,buff,convertValue(hand.high_value),convertValue(hand.second_value));
+	if(hand.rank == 7)
+		printf("%s have Fullhouse(Rank 7). %s have 3 cards of %s and pair of %s.\n",buff,buff,convertValue(hand.high_value),convertValue(hand.second_value));
+	if(hand.rank == 6)
+		printf("%s have Flush(Rank 6). %s have 5 cards of the same suit as %s, %s, %s, %s, %s.\n",buff,buff,convertValue(hand.high_value),convertValue(hand.second_value),convertValue(hand.third_value),convertValue(hand.fouth_value),convertValue(hand.last_value));
+	if(hand.rank == 5)
+		printf("%s have Straight(Rank 5). %s have Straight from %s to %s.\n",buff,buff,convertValue(hand.high_value-4),convertValue(hand.high_value));
+	if(hand.rank == 4)
+		printf("%s have Three of a kind(Rank 4). %s have 3 cards of %s.The remaining highest value cards are %s and %s.\n",buff,buff,convertValue(hand.high_value),convertValue(hand.second_value),convertValue(hand.third_value));
+	if(hand.rank == 3)
+		printf("%s have Two pair(Rank 3). %s have pair of %s and %s. The remaining highest value card is %s.\n",buff,buff,convertValue(hand.high_value),convertValue(hand.second_value),convertValue(hand.third_value));
+	if(hand.rank == 2)
+		printf("%s have Pair(Rank 2). %s have pair of %s. The remaining highest value cards are %s, %s and %s.\n",buff,buff,convertValue(hand.high_value),convertValue(hand.second_value),convertValue(hand.third_value),convertValue(hand.fouth_value));
+	if(hand.rank == 1)
+		printf("%s have High Card(Rank 1). 5 most valuable cards are %s, %s, %s, %s, %s.\n",buff,convertValue(hand.high_value),convertValue(hand.second_value),convertValue(hand.third_value),convertValue(hand.fouth_value),convertValue(hand.last_value));
 }
 void copyHand()
 {
@@ -200,49 +204,9 @@ void ViewLastBattleResult()
 	printf("Opponent's hand:\n");
 	drawOpponentHand();
 	printf("Information:\n");
-	printf("+ You have %s.\n",rank(hand1.rank));
-	if(hand1.high_value!=0)
-	{
-		printf("+ The most valuable card is %s.\n", convertValue(hand1.high_value));
-	}
-	if(hand1.second_value!=0)
-	{
-		printf("+ The second valuable card is %s.\n", convertValue(hand1.second_value));
-	}
-	if(hand1.third_value!=0)
-	{
-		printf("+ The third valuable card is %s.\n", convertValue(hand1.third_value));
-	}
-	if(hand1.fouth_value!=0)
-	{
-		printf("+ The fouth valuable card is %s.\n", convertValue(hand1.fouth_value));
-	}
-	if(hand1.high_value!=0)
-	{
-		printf("+ The 5th valuable card is %s.\n", convertValue(hand1.last_value));
-	}
+	analysis(hand1,1);
 	printf("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
-	printf("- Opponent have %s.\n",rank(hand2.rank));
-	if(hand1.high_value!=0)
-	{
-		printf("+ The most valuable card is %s.\n", convertValue(hand2.high_value));
-	}
-	if(hand1.second_value!=0)
-	{
-		printf("+ The second valuable card is %s.\n", convertValue(hand2.second_value));
-	}
-	if(hand1.third_value!=0)
-	{
-		printf("+ The third valuable card is %s.\n", convertValue(hand2.third_value));
-	}
-	if(hand1.fouth_value!=0)
-	{
-		printf("+ The fouth valuable card is %s.\n", convertValue(hand2.fouth_value));
-	}
-	if(hand1.high_value!=0)
-	{
-		printf("+ The 5th valuable card is %s.\n", convertValue(hand2.last_value));
-	}
+	analysis(hand2,2);
 }
 char *getNickName(char *msg)
 {
@@ -918,11 +882,11 @@ int main()
 					setPlay();
 					setHandCard(msg);
 					plus = firstplay(opponent,sockfd);
-					countdown(2);
-					system("clear");
-					printf("You get %d points added to your account\n",plus);
 					strcpy(msg,makePlusScoreMessage(nickname,plus));
 					send(sockfd,msg,strlen(msg),0);
+					countdown(2);
+					system("clear");
+					printf("You get %d points added to your account\n",plus);					
 					break;
 				}
 				case 2:
@@ -949,7 +913,6 @@ int main()
 						system("clear");
 						printf("You get %d points added to your account\n",plus);
 						strcpy(msg,makePlusScoreMessage(nickname,plus));
-						sleep(1);
 						send(sockfd,msg,strlen(msg),0);
 					}
 					else
