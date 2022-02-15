@@ -388,7 +388,7 @@ int firstplay(char *opponent,int sockfd)
 	copyHand();
 	while(1)
 	{
-		if(count == 2)
+		if(count == 1)
 		{
 			Round++;
 			newRound = 1;
